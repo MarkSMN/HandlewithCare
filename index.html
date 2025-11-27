@@ -154,100 +154,100 @@ const STATES = {
     CELEBRATION: 'celebration'
 };
 
-// Scaled down levels for portrait - trucks come from TOP, warehouse at BOTTOM
+// Scaled levels for portrait - trucks come from TOP, warehouse at BOTTOM
 const LEVELS = [
     {
         name: "THE PICKUP",
         description: "Small piece for a client",
         truckType: "trunk",
-        truckWidth: 50,
-        truckHeight: 70,
+        truckWidth: 75,
+        truckHeight: 100,
         timeLimit: 60,
-        crates: [{ w: 35, h: 25, label: "PHOTO" }]
+        crates: [{ w: 50, h: 36, label: "PHOTO" }]
     },
     {
         name: "COLLECTOR'S RUN",
         description: "A few pieces uptown",
         truckType: "trunk",
-        truckWidth: 55,
-        truckHeight: 75,
+        truckWidth: 80,
+        truckHeight: 110,
         timeLimit: 60,
         crates: [
-            { w: 30, h: 22, label: "PRINT" },
-            { w: 35, h: 25, label: "FRAME" },
-            { w: 22, h: 18, label: "SMALL" }
+            { w: 44, h: 32, label: "PRINT" },
+            { w: 50, h: 36, label: "FRAME" },
+            { w: 32, h: 26, label: "SMALL" }
         ]
     },
     {
         name: "WEEKEND WARRIOR",
         description: "Pickup to the art fair",
         truckType: "pickup",
-        truckWidth: 70,
-        truckHeight: 110,
+        truckWidth: 100,
+        truckHeight: 155,
         timeLimit: 60,
         crates: [
-            { w: 40, h: 28, label: "CANVAS" },
-            { w: 35, h: 32, label: "SCULPT" },
-            { w: 45, h: 25, label: "PANEL" },
-            { w: 28, h: 20, label: "PRINT" }
+            { w: 58, h: 40, label: "CANVAS" },
+            { w: 50, h: 46, label: "SCULPT" },
+            { w: 65, h: 36, label: "PANEL" },
+            { w: 40, h: 28, label: "PRINT" }
         ]
     },
     {
         name: "GALLERY INSTALL",
         description: "Sprinter van, group show",
         truckType: "sprinter",
-        truckWidth: 90,
-        truckHeight: 150,
+        truckWidth: 130,
+        truckHeight: 210,
         timeLimit: 60,
         crates: [
-            { w: 50, h: 35, label: "LARGE" },
-            { w: 40, h: 28, label: "MED-1" },
-            { w: 40, h: 28, label: "MED-2" },
-            { w: 30, h: 22, label: "SM-1" },
-            { w: 30, h: 22, label: "SM-2" },
-            { w: 25, h: 18, label: "TINY" }
+            { w: 72, h: 50, label: "LARGE" },
+            { w: 58, h: 40, label: "MED-1" },
+            { w: 58, h: 40, label: "MED-2" },
+            { w: 44, h: 32, label: "SM-1" },
+            { w: 44, h: 32, label: "SM-2" },
+            { w: 36, h: 26, label: "TINY" }
         ]
     },
     {
         name: "BOX TRUCK BLUES",
         description: "Museum loan, careful!",
         truckType: "box",
-        truckWidth: 110,
-        truckHeight: 200,
+        truckWidth: 160,
+        truckHeight: 280,
         timeLimit: 60,
         crates: [
-            { w: 55, h: 38, label: "MAJOR" },
-            { w: 45, h: 32, label: "LRG-1" },
-            { w: 45, h: 32, label: "LRG-2" },
-            { w: 38, h: 26, label: "MED-A" },
-            { w: 38, h: 26, label: "MED-B" },
-            { w: 32, h: 22, label: "MED-C" },
-            { w: 28, h: 20, label: "SMALL" },
-            { w: 24, h: 18, label: "TINY1" },
-            { w: 24, h: 18, label: "TINY2" }
+            { w: 80, h: 54, label: "MAJOR" },
+            { w: 65, h: 46, label: "LRG-1" },
+            { w: 65, h: 46, label: "LRG-2" },
+            { w: 54, h: 38, label: "MED-A" },
+            { w: 54, h: 38, label: "MED-B" },
+            { w: 46, h: 32, label: "MED-C" },
+            { w: 40, h: 28, label: "SMALL" },
+            { w: 34, h: 26, label: "TINY1" },
+            { w: 34, h: 26, label: "TINY2" }
         ]
     },
     {
         name: "THE BIG MOVE",
         description: "53-footer. Big day.",
         truckType: "semi",
-        truckWidth: 140,
-        truckHeight: 320,
+        truckWidth: 200,
+        truckHeight: 450,
         timeLimit: 60,
         crates: [
-            { w: 70, h: 48, label: "MASSIVE" },
-            { w: 58, h: 40, label: "HUGE-1" },
-            { w: 58, h: 40, label: "HUGE-2" },
-            { w: 48, h: 33, label: "BIG-A" },
-            { w: 48, h: 33, label: "BIG-B" },
-            { w: 40, h: 28, label: "LRG-1" },
-            { w: 40, h: 28, label: "LRG-2" },
-            { w: 32, h: 22, label: "MED-1" },
-            { w: 32, h: 22, label: "MED-2" },
-            { w: 32, h: 22, label: "MED-3" },
-            { w: 26, h: 18, label: "SM-1" },
-            { w: 26, h: 18, label: "SM-2" },
-            { w: 22, h: 16, label: "TINY" }
+            { w: 100, h: 68, label: "MASSIVE" },
+            { w: 82, h: 58, label: "HUGE-1" },
+            { w: 82, h: 58, label: "HUGE-2" },
+            { w: 68, h: 48, label: "BIG-A" },
+            { w: 68, h: 48, label: "BIG-B" },
+            { w: 58, h: 40, label: "LRG-1" },
+            { w: 58, h: 40, label: "LRG-2" },
+            { w: 46, h: 32, label: "MED-1" },
+            { w: 46, h: 32, label: "MED-2" },
+            { w: 46, h: 32, label: "MED-3" },
+            { w: 38, h: 26, label: "SM-1" },
+            { w: 38, h: 26, label: "SM-2" },
+            { w: 32, h: 24, label: "TINY" }
         ]
     },
     {
@@ -255,19 +255,19 @@ const LEVELS = [
         description: "Two trucks. Don't ask.",
         truckType: "combo",
         trucks: [
-            { type: "trunk", width: 50, height: 65, x: 80 },
-            { type: "sprinter", width: 85, height: 140, x: 350 }
+            { type: "trunk", width: 75, height: 95, x: 50 },
+            { type: "sprinter", width: 125, height: 200, x: 320 }
         ],
         timeLimit: 60,
         crates: [
-            { w: 45, h: 32, label: "LARGE" },
-            { w: 36, h: 26, label: "MED-1" },
-            { w: 36, h: 26, label: "MED-2" },
-            { w: 28, h: 20, label: "SM-1" },
-            { w: 28, h: 20, label: "SM-2" },
-            { w: 24, h: 18, label: "TINY1" },
-            { w: 24, h: 18, label: "TINY2" },
-            { w: 20, h: 15, label: "MINI" }
+            { w: 65, h: 46, label: "LARGE" },
+            { w: 52, h: 38, label: "MED-1" },
+            { w: 52, h: 38, label: "MED-2" },
+            { w: 40, h: 28, label: "SM-1" },
+            { w: 40, h: 28, label: "SM-2" },
+            { w: 34, h: 26, label: "TINY1" },
+            { w: 34, h: 26, label: "TINY2" },
+            { w: 28, h: 22, label: "MINI" }
         ]
     },
     {
@@ -275,30 +275,30 @@ const LEVELS = [
         description: "Two big trucks. Legend.",
         truckType: "double",
         trucks: [
-            { type: "box", width: 100, height: 180, x: 30 },
-            { type: "box", width: 100, height: 180, x: 310 }
+            { type: "box", width: 145, height: 255, x: 15 },
+            { type: "box", width: 145, height: 255, x: 290 }
         ],
         timeLimit: 60,
         crates: [
-            { w: 52, h: 36, label: "MONUMENT" },
-            { w: 45, h: 30, label: "EPIC-1" },
-            { w: 45, h: 30, label: "EPIC-2" },
-            { w: 38, h: 26, label: "MAJOR-A" },
-            { w: 38, h: 26, label: "MAJOR-B" },
-            { w: 32, h: 22, label: "BIG-1" },
-            { w: 32, h: 22, label: "BIG-2" },
-            { w: 32, h: 22, label: "BIG-3" },
-            { w: 28, h: 20, label: "LRG-1" },
-            { w: 28, h: 20, label: "LRG-2" },
-            { w: 28, h: 20, label: "LRG-3" },
-            { w: 24, h: 17, label: "MED-1" },
-            { w: 24, h: 17, label: "MED-2" },
-            { w: 24, h: 17, label: "MED-3" },
-            { w: 24, h: 17, label: "MED-4" },
-            { w: 20, h: 14, label: "SM-1" },
-            { w: 20, h: 14, label: "SM-2" },
-            { w: 18, h: 12, label: "TINY1" },
-            { w: 18, h: 12, label: "TINY2" }
+            { w: 75, h: 52, label: "MONUMENT" },
+            { w: 65, h: 44, label: "EPIC-1" },
+            { w: 65, h: 44, label: "EPIC-2" },
+            { w: 54, h: 38, label: "MAJOR-A" },
+            { w: 54, h: 38, label: "MAJOR-B" },
+            { w: 46, h: 32, label: "BIG-1" },
+            { w: 46, h: 32, label: "BIG-2" },
+            { w: 46, h: 32, label: "BIG-3" },
+            { w: 40, h: 28, label: "LRG-1" },
+            { w: 40, h: 28, label: "LRG-2" },
+            { w: 40, h: 28, label: "LRG-3" },
+            { w: 34, h: 24, label: "MED-1" },
+            { w: 34, h: 24, label: "MED-2" },
+            { w: 34, h: 24, label: "MED-3" },
+            { w: 34, h: 24, label: "MED-4" },
+            { w: 28, h: 20, label: "SM-1" },
+            { w: 28, h: 20, label: "SM-2" },
+            { w: 26, h: 18, label: "TINY1" },
+            { w: 26, h: 18, label: "TINY2" }
         ]
     }
 ];
@@ -544,7 +544,7 @@ class Crate {
         ctx.fillRect(this.x + w - 2, this.y, 2, h);
         
         ctx.fillStyle = selected ? '#000' : lightColor;
-        ctx.font = Math.min(8, w/5) + 'px "Press Start 2P", monospace';
+        ctx.font = Math.min(11, w/4.5) + 'px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.label, this.x + w/2, this.y + h/2);
@@ -686,9 +686,9 @@ class Truck {
         
         // Company name on cab
         ctx.fillStyle = COLORS.textDim;
-        ctx.font = '6px "Press Start 2P", monospace';
+        ctx.font = '9px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(this.companyName, this.x + this.bedWidth/2, cabY - 8);
+        ctx.fillText(this.companyName, this.x + this.bedWidth/2, cabY - 10);
     }
 }
 
@@ -831,26 +831,26 @@ function drawWarehouse() {
 function drawUI() {
     const level = LEVELS[currentLevel];
     ctx.fillStyle = COLORS.text;
-    ctx.font = '9px "Press Start 2P", monospace';
+    ctx.font = '14px "Press Start 2P", monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('LVL ' + (currentLevel + 1), 10, 22);
+    ctx.fillText('LVL ' + (currentLevel + 1), 12, 28);
     
     ctx.fillStyle = COLORS.textDim;
-    ctx.font = '7px "Press Start 2P", monospace';
-    ctx.fillText(level.name, 10, 38);
+    ctx.font = '10px "Press Start 2P", monospace';
+    ctx.fillText(level.name, 12, 48);
     
     const timerColor = timeRemaining <= 10 ? COLORS.timerLow : COLORS.timer;
     ctx.fillStyle = timerColor;
-    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.font = '18px "Press Start 2P", monospace';
     ctx.textAlign = 'right';
     const minutes = Math.floor(timeRemaining / 60);
     const seconds = Math.floor(timeRemaining % 60);
-    ctx.fillText(minutes + ':' + seconds.toString().padStart(2, '0'), canvas.width - 10, 22);
+    ctx.fillText(minutes + ':' + seconds.toString().padStart(2, '0'), canvas.width - 12, 28);
     
     const loadedCount = crates.filter(c => c.loaded && c.valid).length;
     ctx.fillStyle = COLORS.textDim;
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillText(loadedCount + '/' + crates.length, canvas.width - 10, 38);
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.fillText(loadedCount + '/' + crates.length, canvas.width - 12, 48);
 }
 
 function drawTitleScreen() {
