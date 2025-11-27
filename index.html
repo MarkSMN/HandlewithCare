@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CRATE LOADER - Art Handler's Challenge</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Press Start 2P', monospace;
+            overflow: hidden;
+            touch-action: none;
+        }
+        
+        .crt {
+            position: relative;
+        }
+        
+        .crt::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        #gameCanvas {
+            border: 4px solid #c9a227;
+            border-radius: 8px;
+            image-rendering: pixelated;
+            cursor: crosshair;
+            max-height: 90vh;
+            max-width: 95vw;
+        }
+        
+        .game-title {
+            color: #c9a227;
+            font-size: 16px;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0px #8b6914;
+            letter-spacing: 2px;
+        }
+        
+        .controls-hint {
+            color: #5a6650;
+            font-size: 7px;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        
+        .controls-hint span {
+            color: #c9a227;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-title">HANDLE WITH CARE</div>
+    <div class="crt">
+        <canvas id="gameCanvas" width="540" height="860"></canvas>
+    </div>
+    <div class="controls-hint">
+        <span>[TAP]</span> SELECT &nbsp;&nbsp; 
+        <span>[DRAG]</span> MOVE &nbsp;&nbsp; 
+        <span>[DOUBLE-TAP]</span> ROTATE &nbsp;&nbsp;
+        <span>[TAP SCREEN]</span> START
+    </div>
+    <script>
+// CRATE LOADER - Mobile Portrait Version
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Colors
+const COLORS = {
+    bg: '#2a2a2a',
+    warehouseFloor: '#4a4a4a',
+    warehouseLine: '#5a5a5a',
+    truckBed: '#1a1a1a',
+    truckOutline: '#c9a227',
+    truckBody: '#4a7c9b',
+    truckBodyDark: '#3a6080',
+    truckBodyHighlight: '#6a9cbb',
+    truckWhite: '#e8e8e8',
+    truckWhiteDark: '#cccccc',
+    windowGlass: '#1a2a3a',
+    mirror: '#3a3a3a',
+    headlight: '#fef3c7',
+    taillight: '#ef4444',
+    brakeLightOn: '#ff0000',
+    crate: '#8b6914',
+    crateLight: '#c9a227',
+    crateDark: '#5a4510',
+    crateSelected: '#e8d44d',
+    crateValid: '#6b8e23',
+    crateInvalid: '#8b3a3a',
+    text: '#c9a227',
+    textDim: '#7d8471',
+    timer: '#c9a227',
+    timerLow: '#8b3a3a'
+};
+
+const TRUCK_NAMES = {
+    trunk: ['COLLECTOR', 'PRIVATE', 'VIP'],
+    pickup: ['DIETL', 'HEDLEY\'S', 'RACINE'],
+    sprinter: ['CROZIER', 'ATELIER 4', 'CADOGAN'],
+    box: ['MASTERPIECE', 'UOVO', 'DIETL'],
+    semi: ['CROZIER', 'MASTERPIECE', 'CADOGAN']
+};
+
+const VEHICLE_COLORS = [
+    { body: '#4a7c9b', highlight: '#6a9cbb', dark: '#3a6080' },
+    { body: '#8b4a4a', highlight: '#ab6a6a', dark: '#6b3030' },
+    { body: '#4a8b5a', highlight: '#6aab7a', dark: '#306b40' },
+    { body: '#7a6b4a', highlight: '#9a8b6a', dark: '#5a4b30' },
+    { body: '#5a5a6b', highlight: '#7a7a8b', dark: '#3a3a4b' },
+    { body: '#8b7a4a', highlight: '#ab9a6a', dark: '#6b5a30' },
+    { body: '#4a5a7b', highlight: '#6a7a9b', dark: '#303a5b' },
+    { body: '#6b4a6b', highlight: '#8b6a8b', dark: '#4b304b' },
+    { body: '#4a7b7b', highlight: '#6a9b9b', dark: '#305b5b' },
+    { body: '#7b5a4a', highlight: '#9b7a6a', dark: '#5b3a30' },
+];
+
+const STATES = {
+    TITLE: 'title',
+    TRUCK_ENTERING: 'entering',
+    PLAYING: 'playing',
+    TRUCK_WAITING: 'waiting',
+    TRUCK_EXITING: 'exiting',
+    WIN: 'win',
+    LOSE: 'lose',
+    CELEBRATION: 'celebration'
+};
+
+// Scaled down levels for portrait - trucks come from TOP, warehouse at BOTTOM
+const LEVELS = [
+    {
+        name: "THE PICKUP",
+        description: "Small piece for a client",
+        truckType: "trunk",
+        truckWidth: 50,
+        truckHeight: 70,
+        timeLimit: 60,
+        crates: [{ w: 35, h: 25, label: "PHOTO" }]
+    },
+    {
+        name: "COLLECTOR'S RUN",
+        description: "A few pieces uptown",
+        truckType: "trunk",
+        truckWidth: 55,
+        truckHeight: 75,
+        timeLimit: 60,
+        crates: [
+            { w: 30, h: 22, label: "PRINT" },
+            { w: 35, h: 25, label: "FRAME" },
+            { w: 22, h: 18, label: "SMALL" }
+        ]
+    },
+    {
+        name: "WEEKEND WARRIOR",
+        description: "Pickup to the art fair",
+        truckType: "pickup",
+        truckWidth: 70,
+        truckHeight: 110,
+        timeLimit: 60,
+        crates: [
+            { w: 40, h: 28, label: "CANVAS" },
+            { w: 35, h: 32, label: "SCULPT" },
+            { w: 45, h: 25, label: "PANEL" },
+            { w: 28, h: 20, label: "PRINT" }
+        ]
+    },
+    {
+        name: "GALLERY INSTALL",
+        description: "Sprinter van, group show",
+        truckType: "sprinter",
+        truckWidth: 90,
+        truckHeight: 150,
+        timeLimit: 60,
+        crates: [
+            { w: 50, h: 35, label: "LARGE" },
+            { w: 40, h: 28, label: "MED-1" },
+            { w: 40, h: 28, label: "MED-2" },
+            { w: 30, h: 22, label: "SM-1" },
+            { w: 30, h: 22, label: "SM-2" },
+            { w: 25, h: 18, label: "TINY" }
+        ]
+    },
+    {
+        name: "BOX TRUCK BLUES",
+        description: "Museum loan, careful!",
+        truckType: "box",
+        truckWidth: 110,
+        truckHeight: 200,
+        timeLimit: 60,
+        crates: [
+            { w: 55, h: 38, label: "MAJOR" },
+            { w: 45, h: 32, label: "LRG-1" },
+            { w: 45, h: 32, label: "LRG-2" },
+            { w: 38, h: 26, label: "MED-A" },
+            { w: 38, h: 26, label: "MED-B" },
+            { w: 32, h: 22, label: "MED-C" },
+            { w: 28, h: 20, label: "SMALL" },
+            { w: 24, h: 18, label: "TINY1" },
+            { w: 24, h: 18, label: "TINY2" }
+        ]
+    },
+    {
+        name: "THE BIG MOVE",
+        description: "53-footer. Big day.",
+        truckType: "semi",
+        truckWidth: 140,
+        truckHeight: 320,
+        timeLimit: 60,
+        crates: [
+            { w: 70, h: 48, label: "MASSIVE" },
+            { w: 58, h: 40, label: "HUGE-1" },
+            { w: 58, h: 40, label: "HUGE-2" },
+            { w: 48, h: 33, label: "BIG-A" },
+            { w: 48, h: 33, label: "BIG-B" },
+            { w: 40, h: 28, label: "LRG-1" },
+            { w: 40, h: 28, label: "LRG-2" },
+            { w: 32, h: 22, label: "MED-1" },
+            { w: 32, h: 22, label: "MED-2" },
+            { w: 32, h: 22, label: "MED-3" },
+            { w: 26, h: 18, label: "SM-1" },
+            { w: 26, h: 18, label: "SM-2" },
+            { w: 22, h: 16, label: "TINY" }
+        ]
+    },
+    {
+        name: "CHAOS MODE",
+        description: "Two trucks. Don't ask.",
+        truckType: "combo",
+        trucks: [
+            { type: "trunk", width: 50, height: 65, x: 80 },
+            { type: "sprinter", width: 85, height: 140, x: 350 }
+        ],
+        timeLimit: 60,
+        crates: [
+            { w: 45, h: 32, label: "LARGE" },
+            { w: 36, h: 26, label: "MED-1" },
+            { w: 36, h: 26, label: "MED-2" },
+            { w: 28, h: 20, label: "SM-1" },
+            { w: 28, h: 20, label: "SM-2" },
+            { w: 24, h: 18, label: "TINY1" },
+            { w: 24, h: 18, label: "TINY2" },
+            { w: 20, h: 15, label: "MINI" }
+        ]
+    },
+    {
+        name: "MUSEUM DEINSTALL",
+        description: "Two big trucks. Legend.",
+        truckType: "double",
+        trucks: [
+            { type: "box", width: 100, height: 180, x: 30 },
+            { type: "box", width: 100, height: 180, x: 310 }
+        ],
+        timeLimit: 60,
+        crates: [
+            { w: 52, h: 36, label: "MONUMENT" },
+            { w: 45, h: 30, label: "EPIC-1" },
+            { w: 45, h: 30, label: "EPIC-2" },
+            { w: 38, h: 26, label: "MAJOR-A" },
+            { w: 38, h: 26, label: "MAJOR-B" },
+            { w: 32, h: 22, label: "BIG-1" },
+            { w: 32, h: 22, label: "BIG-2" },
+            { w: 32, h: 22, label: "BIG-3" },
+            { w: 28, h: 20, label: "LRG-1" },
+            { w: 28, h: 20, label: "LRG-2" },
+            { w: 28, h: 20, label: "LRG-3" },
+            { w: 24, h: 17, label: "MED-1" },
+            { w: 24, h: 17, label: "MED-2" },
+            { w: 24, h: 17, label: "MED-3" },
+            { w: 24, h: 17, label: "MED-4" },
+            { w: 20, h: 14, label: "SM-1" },
+            { w: 20, h: 14, label: "SM-2" },
+            { w: 18, h: 12, label: "TINY1" },
+            { w: 18, h: 12, label: "TINY2" }
+        ]
+    }
+];
+
+// Game state
+let gameState = STATES.TITLE;
+let currentLevel = 0;
+let timeRemaining = 0;
+let lastTime = 0;
+let crates = [];
+let trucks = [];
+let selectedCrate = null;
+let dragOffset = { x: 0, y: 0 };
+let isDragging = false;
+let warehouseArea = { x: 0, y: 660, width: 540, height: 200 };
+
+// Animation state
+let animationProgress = 0;
+let lastBeepTime = 0;
+let waitTimer = 0;
+const BEEP_INTERVAL = 400;
+const TRUCK_SPEED = 200;
+const WAIT_DELAY = 1.0;
+
+// Double-tap detection
+let lastTapTime = 0;
+let lastTapCrate = null;
+const DOUBLE_TAP_DELAY = 300;
+
+// Celebration
+let celebrationStartTime = 0;
+let celebrationScrollY = 0;
+let victoryMusicPlayed = false;
+const SCROLL_SPEED = 40;
+
+const CREDITS_TEXT = [
+    "", "", "CONGRATULATIONS!", "", "",
+    "- - - - - - - -", "", "",
+    "NO CRATES WERE HARMED", "IN THE MAKING", "OF THIS GAME", "", "",
+    "SPECIAL THANKS TO:", "", "THE FORKLIFT", "", "BUBBLE WRAP", "",
+    "FURNITURE BLANKETS", "", "THAT ONE DOLLY WITH", "THE SQUEAKY WHEEL", "", "",
+    "- - - - - - - -", "", "",
+    "REMEMBER:", "", "LIFT WITH YOUR LEGS", "", "MEASURE TWICE", "CUT ONCE", "",
+    "THE CRATE IS NEVER", "AS LIGHT AS IT LOOKS", "", "",
+    "- - - - - - - -", "", "", "NOW GO TAKE A BREAK", "", "YOU'VE EARNED IT", "", "", "", "",
+    "", "", "", "[TAP TO CONTINUE]", "", "", ""
+];
+
+// Audio
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function playSound(type) {
+    if (!audioCtx) return;
+    
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    switch(type) {
+        case 'select':
+            osc.frequency.value = 440;
+            osc.type = 'square';
+            gain.gain.value = 0.1;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+            break;
+        case 'place':
+            osc.frequency.value = 220;
+            osc.type = 'square';
+            gain.gain.value = 0.1;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+            break;
+        case 'rotate':
+            osc.frequency.value = 660;
+            osc.type = 'square';
+            gain.gain.value = 0.08;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+            break;
+        case 'beep':
+            osc.frequency.value = 1000;
+            osc.type = 'square';
+            gain.gain.value = 0.15;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+            break;
+        case 'engine':
+            osc.frequency.value = 80;
+            osc.type = 'sawtooth';
+            gain.gain.value = 0.08;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+            break;
+        case 'horn':
+            osc.frequency.value = 350;
+            osc.type = 'square';
+            gain.gain.value = 0.12;
+            const now = audioCtx.currentTime;
+            osc.frequency.setValueAtTime(350, now);
+            osc.frequency.setValueAtTime(280, now + 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start();
+            osc.stop(now + 0.4);
+            break;
+        case 'win':
+            const notes = [523, 659, 784, 1047];
+            notes.forEach((freq, i) => {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                o.frequency.value = freq;
+                o.type = 'square';
+                g.gain.value = 0.1;
+                g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15 + i * 0.1);
+                o.start(audioCtx.currentTime + i * 0.1);
+                o.stop(audioCtx.currentTime + 0.15 + i * 0.1);
+            });
+            break;
+        case 'lose':
+            osc.frequency.value = 200;
+            osc.type = 'sawtooth';
+            gain.gain.value = 0.15;
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+            break;
+        case 'start':
+            osc.frequency.value = 330;
+            osc.type = 'square';
+            gain.gain.value = 0.1;
+            osc.frequency.exponentialRampToValueAtTime(660, audioCtx.currentTime + 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+            break;
+    }
+}
+
+function playVictoryFanfare() {
+    if (!audioCtx) return;
+    const melody = [
+        { freq: 523, time: 0, dur: 0.15 }, { freq: 523, time: 0.15, dur: 0.15 },
+        { freq: 523, time: 0.3, dur: 0.15 }, { freq: 523, time: 0.45, dur: 0.4 },
+        { freq: 415, time: 0.9, dur: 0.15 }, { freq: 466, time: 1.05, dur: 0.15 },
+        { freq: 523, time: 1.2, dur: 0.15 }, { freq: 466, time: 1.4, dur: 0.1 },
+        { freq: 523, time: 1.55, dur: 0.6 }, { freq: 587, time: 2.3, dur: 0.15 },
+        { freq: 587, time: 2.45, dur: 0.15 }, { freq: 587, time: 2.6, dur: 0.15 },
+        { freq: 587, time: 2.75, dur: 0.4 }, { freq: 523, time: 3.2, dur: 0.15 },
+        { freq: 587, time: 3.35, dur: 0.15 }, { freq: 659, time: 3.5, dur: 0.15 },
+        { freq: 587, time: 3.7, dur: 0.1 }, { freq: 659, time: 3.85, dur: 0.8 },
+        { freq: 784, time: 4.8, dur: 0.2 }, { freq: 880, time: 5.0, dur: 0.2 },
+        { freq: 1047, time: 5.2, dur: 1.0 },
+    ];
+    const now = audioCtx.currentTime;
+    melody.forEach(note => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = note.freq;
+        osc.type = 'square';
+        gain.gain.value = 0.12;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + note.time + note.dur);
+        osc.start(now + note.time);
+        osc.stop(now + note.time + note.dur + 0.05);
+    });
+}
+
+// Crate class
+class Crate {
+    constructor(w, h, label, x, y) {
+        this.width = w;
+        this.height = h;
+        this.label = label;
+        this.x = x;
+        this.y = y;
+        this.rotation = 0;
+        this.loaded = false;
+        this.valid = true;
+    }
+    
+    get displayWidth() { return this.rotation === 0 ? this.width : this.height; }
+    get displayHeight() { return this.rotation === 0 ? this.height : this.width; }
+    
+    contains(px, py) {
+        return px >= this.x && px <= this.x + this.displayWidth &&
+               py >= this.y && py <= this.y + this.displayHeight;
+    }
+    
+    rotate() {
+        this.rotation = this.rotation === 0 ? 90 : 0;
+        playSound('rotate');
+    }
+    
+    draw(selected = false) {
+        const w = this.displayWidth;
+        const h = this.displayHeight;
+        
+        let baseColor = COLORS.crate;
+        let lightColor = COLORS.crateLight;
+        let darkColor = COLORS.crateDark;
+        
+        if (selected) {
+            if (!this.valid) {
+                baseColor = COLORS.crateInvalid;
+                lightColor = '#c45a5a';
+                darkColor = '#5a2020';
+            } else if (this.loaded) {
+                baseColor = COLORS.crateValid;
+                lightColor = '#9bc94d';
+                darkColor = '#4a5a20';
+            } else {
+                baseColor = COLORS.crateSelected;
+                lightColor = '#f5e87a';
+                darkColor = '#8b7a20';
+            }
+        }
+        
+        ctx.fillStyle = baseColor;
+        ctx.fillRect(this.x, this.y, w, h);
+        
+        ctx.fillStyle = lightColor;
+        ctx.fillRect(this.x, this.y, w, 2);
+        ctx.fillRect(this.x, this.y, 2, h);
+        
+        ctx.fillStyle = darkColor;
+        ctx.fillRect(this.x, this.y + h - 2, w, 2);
+        ctx.fillRect(this.x + w - 2, this.y, 2, h);
+        
+        ctx.fillStyle = selected ? '#000' : lightColor;
+        ctx.font = Math.min(8, w/5) + 'px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.label, this.x + w/2, this.y + h/2);
+    }
+}
+
+// Truck class - VERTICAL orientation, BACKING UP (cab at top, cargo opens DOWN toward warehouse)
+class Truck {
+    constructor(type, bedWidth, bedHeight, x, y) {
+        this.type = type;
+        this.bedWidth = bedWidth;   // horizontal
+        this.bedHeight = bedHeight; // vertical (cargo depth)
+        this.x = x;
+        this.y = y;  // y is the TOP of the cab
+        this.targetY = y;
+        this.isReversing = false;
+        this.isDriving = false;
+        const names = TRUCK_NAMES[type] || ['TRANSPORT'];
+        this.companyName = names[Math.floor(Math.random() * names.length)];
+        
+        const colorPalette = VEHICLE_COLORS[Math.floor(Math.random() * VEHICLE_COLORS.length)];
+        this.bodyColor = colorPalette.body;
+        this.highlightColor = colorPalette.highlight;
+        this.darkColor = colorPalette.dark;
+    }
+    
+    get cabHeight() {
+        switch(this.type) {
+            case 'trunk': return 45;
+            case 'pickup': return 50;
+            case 'sprinter': return 40;
+            case 'box': return 50;
+            case 'semi': return 60;
+            default: return 45;
+        }
+    }
+    
+    // Bed position - BELOW the cab
+    get bedX() { return this.x; }
+    get bedY() { return this.y + this.cabHeight; }
+    
+    get totalHeight() { return this.bedHeight + this.cabHeight; }
+    
+    update(deltaTime) {
+        if (this.isReversing) {
+            // Backing up = moving DOWN toward warehouse
+            this.y += TRUCK_SPEED * deltaTime;
+            if (this.y >= this.targetY) {
+                this.y = this.targetY;
+                this.isReversing = false;
+                return true;
+            }
+        } else if (this.isDriving) {
+            // Driving away = moving UP off screen
+            this.y -= TRUCK_SPEED * deltaTime * 1.5;
+            if (this.y < -this.totalHeight - 50) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    draw() {
+        // CAB at TOP (nose pointing up), BED opens DOWN toward warehouse
+        const cabY = this.y;
+        const bedY = this.y + this.cabHeight;
+        
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(this.x + 3, this.y + 3, this.bedWidth, this.totalHeight);
+        
+        // === CAB (at top, facing up/away) ===
+        ctx.fillStyle = this.bodyColor;
+        ctx.beginPath();
+        ctx.roundRect(this.x, cabY, this.bedWidth, this.cabHeight, [8, 8, 0, 0]);
+        ctx.fill();
+        
+        // Hood at very top (front of vehicle)
+        ctx.fillStyle = this.highlightColor;
+        ctx.beginPath();
+        ctx.roundRect(this.x + 4, cabY + 4, this.bedWidth - 8, this.cabHeight * 0.4, [6, 6, 0, 0]);
+        ctx.fill();
+        
+        // Headlights at top (front)
+        ctx.fillStyle = COLORS.headlight;
+        ctx.beginPath();
+        ctx.arc(this.x + 10, cabY + 8, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(this.x + this.bedWidth - 10, cabY + 8, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Windshield (middle of cab)
+        ctx.fillStyle = this.darkColor;
+        ctx.fillRect(this.x + 5, cabY + this.cabHeight * 0.45, this.bedWidth - 10, 12);
+        ctx.fillStyle = COLORS.windowGlass;
+        ctx.fillRect(this.x + 8, cabY + this.cabHeight * 0.45 + 2, this.bedWidth - 16, 8);
+        
+        // Mirrors on sides
+        ctx.fillStyle = COLORS.mirror;
+        ctx.fillRect(this.x - 4, cabY + this.cabHeight * 0.5, 5, 8);
+        ctx.fillRect(this.x + this.bedWidth - 1, cabY + this.cabHeight * 0.5, 5, 8);
+        
+        // === CARGO BED (opens down toward warehouse) ===
+        ctx.fillStyle = COLORS.truckBed;
+        ctx.fillRect(this.x, bedY, this.bedWidth, this.bedHeight);
+        ctx.strokeStyle = COLORS.truckOutline;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x, bedY, this.bedWidth, this.bedHeight);
+        
+        // Bed grid
+        ctx.strokeStyle = 'rgba(201, 162, 39, 0.12)';
+        ctx.lineWidth = 1;
+        const gridSize = 18;
+        for (let gx = this.x + gridSize; gx < this.x + this.bedWidth; gx += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(gx, bedY);
+            ctx.lineTo(gx, bedY + this.bedHeight);
+            ctx.stroke();
+        }
+        for (let gy = bedY + gridSize; gy < bedY + this.bedHeight; gy += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(this.x, gy);
+            ctx.lineTo(this.x + this.bedWidth, gy);
+            ctx.stroke();
+        }
+        
+        // Taillights at BOTTOM of bed (rear of vehicle, facing warehouse)
+        ctx.fillStyle = this.isReversing ? COLORS.brakeLightOn : COLORS.taillight;
+        ctx.fillRect(this.x + 3, bedY + this.bedHeight - 7, 8, 5);
+        ctx.fillRect(this.x + this.bedWidth - 11, bedY + this.bedHeight - 7, 8, 5);
+        
+        // Reverse lights (white, next to taillights)
+        if (this.isReversing) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(this.x + 13, bedY + this.bedHeight - 7, 6, 5);
+            ctx.fillRect(this.x + this.bedWidth - 19, bedY + this.bedHeight - 7, 6, 5);
+        }
+        
+        // Company name on cab
+        ctx.fillStyle = COLORS.textDim;
+        ctx.font = '6px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.companyName, this.x + this.bedWidth/2, cabY - 8);
+    }
+}
+
+// Initialize level
+function initLevel(levelIndex) {
+    const level = LEVELS[levelIndex];
+    crates = [];
+    trucks = [];
+    selectedCrate = null;
+    timeRemaining = level.timeLimit;
+    animationProgress = 0;
+    lastBeepTime = 0;
+    waitTimer = 0;
+    
+    // Warehouse at bottom
+    warehouseArea.y = canvas.height - 180;
+    warehouseArea.height = 180;
+    warehouseArea.width = canvas.width;
+    
+    // Gap between bed bottom and warehouse top
+    const dockGap = 8;
+    
+    if (level.truckType === 'combo' || level.truckType === 'double') {
+        level.trucks.forEach(t => {
+            // Create truck starting off-screen (above canvas)
+            const truck = new Truck(t.type, t.width, t.height, t.x, -200);
+            // targetY positions the cab top so that bed bottom is at warehouse edge
+            // bedY = y + cabHeight, bedBottom = y + cabHeight + bedHeight
+            // We want: y + cabHeight + bedHeight = warehouseArea.y - dockGap
+            // So: y = warehouseArea.y - dockGap - cabHeight - bedHeight
+            truck.targetY = warehouseArea.y - dockGap - truck.cabHeight - t.height;
+            truck.isReversing = true;
+            trucks.push(truck);
+        });
+    } else {
+        const truckX = (canvas.width - level.truckWidth) / 2;
+        const truck = new Truck(
+            level.truckType,
+            level.truckWidth,
+            level.truckHeight,
+            truckX,
+            -200  // Start off-screen above
+        );
+        // Position so bed bottom is at warehouse edge
+        truck.targetY = warehouseArea.y - dockGap - truck.cabHeight - level.truckHeight;
+        truck.isReversing = true;
+        trucks.push(truck);
+    }
+    
+    // Place crates in warehouse
+    let crateX = 10;
+    let crateY = warehouseArea.y + 15;
+    let rowHeight = 0;
+    const padding = 6;
+    
+    level.crates.forEach(crateData => {
+        if (crateX + crateData.w > canvas.width - 10) {
+            crateX = 10;
+            crateY += rowHeight + padding;
+            rowHeight = 0;
+        }
+        crates.push(new Crate(crateData.w, crateData.h, crateData.label, crateX, crateY));
+        crateX += crateData.w + padding;
+        rowHeight = Math.max(rowHeight, crateData.h);
+    });
+    
+    gameState = STATES.TRUCK_ENTERING;
+    playSound('start');
+}
+
+function cratesCollide(c1, c2) {
+    if (c1 === c2) return false;
+    return !(c1.x + c1.displayWidth <= c2.x ||
+             c2.x + c2.displayWidth <= c1.x ||
+             c1.y + c1.displayHeight <= c2.y ||
+             c2.y + c2.displayHeight <= c1.y);
+}
+
+function isInTruck(crate) {
+    for (const truck of trucks) {
+        if (crate.x >= truck.bedX &&
+            crate.y >= truck.bedY &&
+            crate.x + crate.displayWidth <= truck.bedX + truck.bedWidth &&
+            crate.y + crate.displayHeight <= truck.bedY + truck.bedHeight) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function updateCrateValidity() {
+    crates.forEach(crate => {
+        crate.loaded = isInTruck(crate);
+        let collides = false;
+        crates.forEach(other => {
+            if (cratesCollide(crate, other)) collides = true;
+        });
+        crate.valid = !collides;
+    });
+}
+
+function checkWin() {
+    return crates.every(c => c.loaded && c.valid);
+}
+
+function drawBackground() {
+    ctx.fillStyle = COLORS.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawWarehouse() {
+    ctx.fillStyle = COLORS.warehouseFloor;
+    ctx.fillRect(0, warehouseArea.y, warehouseArea.width, warehouseArea.height);
+    
+    ctx.strokeStyle = COLORS.warehouseLine;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([8, 8]);
+    for (let x = 40; x < warehouseArea.width; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, warehouseArea.y + 10);
+        ctx.lineTo(x, warehouseArea.y + warehouseArea.height - 10);
+        ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    
+    ctx.strokeStyle = COLORS.textDim;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(0, warehouseArea.y, warehouseArea.width, warehouseArea.height);
+    
+    // Dock door at top
+    ctx.fillStyle = '#3a3a3a';
+    ctx.fillRect(20, warehouseArea.y - 4, warehouseArea.width - 40, 6);
+    
+    ctx.fillStyle = COLORS.textDim;
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('WAREHOUSE', canvas.width/2, warehouseArea.y + warehouseArea.height - 8);
+}
+
+function drawUI() {
+    const level = LEVELS[currentLevel];
+    ctx.fillStyle = COLORS.text;
+    ctx.font = '9px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('LVL ' + (currentLevel + 1), 10, 22);
+    
+    ctx.fillStyle = COLORS.textDim;
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.fillText(level.name, 10, 38);
+    
+    const timerColor = timeRemaining <= 10 ? COLORS.timerLow : COLORS.timer;
+    ctx.fillStyle = timerColor;
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.textAlign = 'right';
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = Math.floor(timeRemaining % 60);
+    ctx.fillText(minutes + ':' + seconds.toString().padStart(2, '0'), canvas.width - 10, 22);
+    
+    const loadedCount = crates.filter(c => c.loaded && c.valid).length;
+    ctx.fillStyle = COLORS.textDim;
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillText(loadedCount + '/' + crates.length, canvas.width - 10, 38);
+}
+
+function drawTitleScreen() {
+    ctx.fillStyle = COLORS.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = COLORS.text;
+    ctx.font = '20px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('CRATE', canvas.width/2, 200);
+    ctx.fillText('LOADER', canvas.width/2, 240);
+    
+    ctx.fillStyle = COLORS.textDim;
+    ctx.font = '9px "Press Start 2P", monospace';
+    ctx.fillText("ART HANDLER'S", canvas.width/2, 290);
+    ctx.fillText("CHALLENGE", canvas.width/2, 310);
+    
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillText('Load crates into', canvas.width/2, 400);
+    ctx.fillText('the truck before', canvas.width/2, 420);
+    ctx.fillText('time runs out!', canvas.width/2, 440);
+    
+    ctx.fillStyle = COLORS.text;
+    ctx.fillText('TAP to select', canvas.width/2, 520);
+    ctx.fillText('DRAG to move', canvas.width/2, 545);
+    ctx.fillText('DOUBLE-TAP to rotate', canvas.width/2, 570);
+    
+    if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.font = '10px "Press Start 2P", monospace';
+        ctx.fillText('TAP TO START', canvas.width/2, 700);
+    }
+}
+
+function drawWinScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = COLORS.crateValid;
+    ctx.font = '16px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TRUCK LOADED!', canvas.width/2, 350);
+    
+    ctx.fillStyle = COLORS.text;
+    ctx.font = '10px "Press Start 2P", monospace';
+    ctx.fillText('TIME BONUS: ' + Math.floor(timeRemaining * 10), canvas.width/2, 400);
+    
+    if (currentLevel < LEVELS.length - 1) {
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+            ctx.fillText('TAP FOR NEXT LEVEL', canvas.width/2, 500);
+        }
+    } else {
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+            ctx.fillText('TAP TO CELEBRATE', canvas.width/2, 500);
+        }
+    }
+}
+
+function drawLoseScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = COLORS.crateInvalid;
+    ctx.font = '18px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TIME UP!', canvas.width/2, 350);
+    
+    ctx.fillStyle = COLORS.textDim;
+    ctx.font = '9px "Press Start 2P", monospace';
+    ctx.fillText('The client is', canvas.width/2, 400);
+    ctx.fillText('not happy...', canvas.width/2, 420);
+    
+    if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = COLORS.text;
+        ctx.fillText('TAP TO RETRY', canvas.width/2, 500);
+    }
+}
+
+function drawCelebration(deltaTime) {
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const starTime = Date.now() / 50;
+    ctx.fillStyle = '#333';
+    for (let i = 0; i < 20; i++) {
+        const x = (i * 73 + starTime) % canvas.width;
+        const y = (i * 47) % canvas.height;
+        ctx.fillRect(x, y, 2, 2);
+    }
+    
+    celebrationScrollY += SCROLL_SPEED * deltaTime;
+    
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    
+    const lineHeight = 34;
+    const startY = canvas.height - celebrationScrollY;
+    
+    CREDITS_TEXT.forEach((line, index) => {
+        const y = startY + index * lineHeight;
+        if (y > -30 && y < canvas.height + 30) {
+            if (line === 'CONGRATULATIONS!') {
+                ctx.fillStyle = COLORS.text;
+                ctx.font = '18px "Press Start 2P", monospace';
+            } else if (line === '[TAP TO CONTINUE]') {
+                if (Math.floor(Date.now() / 500) % 2 === 0) {
+                    ctx.fillStyle = COLORS.text;
+                } else {
+                    ctx.fillStyle = 'transparent';
+                }
+                ctx.font = '11px "Press Start 2P", monospace';
+            } else if (line.includes('- - -')) {
+                ctx.fillStyle = COLORS.truckOutline;
+                ctx.font = '10px "Press Start 2P", monospace';
+            } else {
+                ctx.fillStyle = COLORS.textDim;
+                ctx.font = '11px "Press Start 2P", monospace';
+            }
+            ctx.fillText(line, canvas.width / 2, y);
+        }
+    });
+}
+
+let winSoundPlayed = false;
+let loseSoundPlayed = false;
+
+function gameLoop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const deltaTime = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (gameState === STATES.TITLE) {
+        drawTitleScreen();
+        winSoundPlayed = false;
+        loseSoundPlayed = false;
+    } else if (gameState === STATES.TRUCK_ENTERING) {
+        drawBackground();
+        drawWarehouse();
+        
+        let allArrived = true;
+        trucks.forEach(truck => {
+            if (truck.isReversing) {
+                if (!truck.update(deltaTime)) {
+                    allArrived = false;
+                }
+            }
+            truck.draw();
+        });
+        
+        if (timestamp - lastBeepTime > BEEP_INTERVAL) {
+            playSound('beep');
+            lastBeepTime = timestamp;
+        }
+        
+        crates.forEach(c => c.draw(false));
+        drawUI();
+        
+        if (allArrived) {
+            trucks.forEach(t => t.isReversing = false);
+            gameState = STATES.PLAYING;
+        }
+    } else if (gameState === STATES.PLAYING) {
+        timeRemaining -= deltaTime;
+        if (timeRemaining <= 0) {
+            timeRemaining = 0;
+            gameState = STATES.LOSE;
+        }
+        updateCrateValidity();
+        
+        if (checkWin()) {
+            waitTimer = 0;
+            gameState = STATES.TRUCK_WAITING;
+        }
+        
+        drawBackground();
+        drawWarehouse();
+        trucks.forEach(t => t.draw());
+        crates.forEach(c => { if (c !== selectedCrate) c.draw(false); });
+        if (selectedCrate) selectedCrate.draw(true);
+        drawUI();
+    } else if (gameState === STATES.TRUCK_WAITING) {
+        waitTimer += deltaTime;
+        drawBackground();
+        drawWarehouse();
+        trucks.forEach(t => t.draw());
+        crates.forEach(c => c.draw(false));
+        drawUI();
+        
+        if (waitTimer >= WAIT_DELAY) {
+            trucks.forEach(t => t.isDriving = true);
+            gameState = STATES.TRUCK_EXITING;
+            playSound('horn');
+        }
+    } else if (gameState === STATES.TRUCK_EXITING) {
+        drawBackground();
+        drawWarehouse();
+        
+        let allGone = true;
+        trucks.forEach(truck => {
+            if (truck.isDriving) {
+                if (!truck.update(deltaTime)) {
+                    allGone = false;
+                }
+            }
+            truck.draw();
+        });
+        
+        crates.forEach(c => {
+            if (c.loaded) {
+                c.y -= TRUCK_SPEED * deltaTime * 1.5;
+            }
+            c.draw(false);
+        });
+        
+        if (timestamp - lastBeepTime > 300) {
+            playSound('engine');
+            lastBeepTime = timestamp;
+        }
+        
+        drawUI();
+        
+        if (allGone) {
+            gameState = STATES.WIN;
+        }
+    } else if (gameState === STATES.WIN) {
+        if (!winSoundPlayed) { playSound('win'); winSoundPlayed = true; }
+        drawBackground();
+        drawWarehouse();
+        drawUI();
+        drawWinScreen();
+    } else if (gameState === STATES.CELEBRATION) {
+        if (!victoryMusicPlayed) {
+            playVictoryFanfare();
+            victoryMusicPlayed = true;
+            celebrationScrollY = 0;
+        }
+        drawCelebration(deltaTime);
+    } else if (gameState === STATES.LOSE) {
+        if (!loseSoundPlayed) { playSound('lose'); loseSoundPlayed = true; }
+        drawBackground();
+        drawWarehouse();
+        trucks.forEach(t => t.draw());
+        crates.forEach(c => c.draw(false));
+        drawUI();
+        drawLoseScreen();
+    }
+    
+    requestAnimationFrame(gameLoop);
+}
+
+// Input handling - unified for mouse and touch
+function getEventPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    if (e.touches && e.touches.length > 0) {
+        return {
+            x: (e.touches[0].clientX - rect.left) * scaleX,
+            y: (e.touches[0].clientY - rect.top) * scaleY
+        };
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+        return {
+            x: (e.changedTouches[0].clientX - rect.left) * scaleX,
+            y: (e.changedTouches[0].clientY - rect.top) * scaleY
+        };
+    } else {
+        return {
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY
+        };
+    }
+}
+
+function handleStart(e) {
+    e.preventDefault();
+    initAudio();
+    
+    const pos = getEventPos(e);
+    
+    // Handle non-playing states
+    if (gameState === STATES.TITLE) {
+        initLevel(0);
+        return;
+    } else if (gameState === STATES.WIN) {
+        winSoundPlayed = false;
+        if (currentLevel < LEVELS.length - 1) {
+            currentLevel++;
+            initLevel(currentLevel);
+        } else {
+            gameState = STATES.CELEBRATION;
+            victoryMusicPlayed = false;
+            celebrationScrollY = 0;
+        }
+        return;
+    } else if (gameState === STATES.CELEBRATION) {
+        currentLevel = 0;
+        gameState = STATES.TITLE;
+        return;
+    } else if (gameState === STATES.LOSE) {
+        loseSoundPlayed = false;
+        initLevel(currentLevel);
+        return;
+    }
+    
+    if (gameState !== STATES.PLAYING) return;
+    
+    // Find clicked crate
+    let clickedCrate = null;
+    for (let i = crates.length - 1; i >= 0; i--) {
+        if (crates[i].contains(pos.x, pos.y)) {
+            clickedCrate = crates[i];
+            crates.splice(i, 1);
+            crates.push(clickedCrate);
+            break;
+        }
+    }
+    
+    if (clickedCrate) {
+        const now = Date.now();
+        
+        // Check for double-tap on same crate
+        if (clickedCrate === lastTapCrate && now - lastTapTime < DOUBLE_TAP_DELAY) {
+            clickedCrate.rotate();
+            lastTapTime = 0;
+            lastTapCrate = null;
+        } else {
+            if (clickedCrate !== selectedCrate) {
+                selectedCrate = clickedCrate;
+                playSound('select');
+            }
+            dragOffset.x = pos.x - selectedCrate.x;
+            dragOffset.y = pos.y - selectedCrate.y;
+            isDragging = true;
+            lastTapTime = now;
+            lastTapCrate = clickedCrate;
+        }
+    } else {
+        selectedCrate = null;
+        lastTapCrate = null;
+    }
+}
+
+function handleMove(e) {
+    e.preventDefault();
+    if (!isDragging || !selectedCrate) return;
+    
+    const pos = getEventPos(e);
+    selectedCrate.x = pos.x - dragOffset.x;
+    selectedCrate.y = pos.y - dragOffset.y;
+    selectedCrate.x = Math.max(0, Math.min(canvas.width - selectedCrate.displayWidth, selectedCrate.x));
+    selectedCrate.y = Math.max(0, Math.min(canvas.height - selectedCrate.displayHeight, selectedCrate.y));
+}
+
+function handleEnd(e) {
+    e.preventDefault();
+    if (isDragging && selectedCrate) playSound('place');
+    isDragging = false;
+}
+
+// Mouse events
+canvas.addEventListener('mousedown', handleStart);
+canvas.addEventListener('mousemove', handleMove);
+canvas.addEventListener('mouseup', handleEnd);
+canvas.addEventListener('mouseleave', handleEnd);
+
+// Touch events
+canvas.addEventListener('touchstart', handleStart, { passive: false });
+canvas.addEventListener('touchmove', handleMove, { passive: false });
+canvas.addEventListener('touchend', handleEnd, { passive: false });
+canvas.addEventListener('touchcancel', handleEnd, { passive: false });
+
+// Keyboard (still works on desktop)
+document.addEventListener('keydown', function(e) {
+    if (e.code === 'Space') {
+        e.preventDefault();
+        initAudio();
+        if (gameState === STATES.TITLE) {
+            initLevel(0);
+        } else if (gameState === STATES.WIN) {
+            winSoundPlayed = false;
+            if (currentLevel < LEVELS.length - 1) {
+                currentLevel++;
+                initLevel(currentLevel);
+            } else {
+                gameState = STATES.CELEBRATION;
+                victoryMusicPlayed = false;
+            }
+        } else if (gameState === STATES.CELEBRATION) {
+            currentLevel = 0;
+            gameState = STATES.TITLE;
+        } else if (gameState === STATES.LOSE) {
+            loseSoundPlayed = false;
+            initLevel(currentLevel);
+        }
+    }
+    if (e.code === 'KeyR' && gameState === STATES.PLAYING && selectedCrate) {
+        selectedCrate.rotate();
+    }
+    // K = skip to next level (debug/testing)
+    if (e.code === 'KeyK') {
+        initAudio();
+        if (currentLevel < LEVELS.length - 1) {
+            currentLevel++;
+            initLevel(currentLevel);
+        } else {
+            gameState = STATES.CELEBRATION;
+            victoryMusicPlayed = false;
+            celebrationScrollY = 0;
+        }
+    }
+});
+
+requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
