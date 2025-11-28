@@ -1138,17 +1138,6 @@ function drawCutscene() {
     
     const now = Date.now();
     
-    // If typing hasn't started yet, show tap prompt
-    if (cutsceneStartTime === 0) {
-        if (Math.floor(now / 500) % 2 === 0) {
-            ctx.fillStyle = COLORS.text;
-            ctx.font = '12px "Press Start 2P", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('[TAP FOR UPDATE]', canvas.width/2, 720);
-        }
-        return;
-    }
-    
     // Typewriter text
     const elapsed = now - cutsceneStartTime;
     cutsceneTextIndex = Math.min(Math.floor(elapsed / TYPEWRITER_SPEED), CUTSCENE_TEXT.length);
@@ -1472,7 +1461,7 @@ function handleStart(e) {
             if (currentLevel === CUTSCENE_AFTER_LEVEL) {
                 currentLevel++;
                 gameState = STATES.CUTSCENE;
-                cutsceneStartTime = 0;
+                cutsceneStartTime = Date.now(); // Auto-start typing
                 cutsceneTextIndex = 0;
                 lastCutsceneTypedIndex = -1;
             } else {
@@ -1486,11 +1475,8 @@ function handleStart(e) {
         }
         return;
     } else if (gameState === STATES.CUTSCENE) {
-        // First tap starts typing, second tap (after done) starts next level
-        if (cutsceneStartTime === 0) {
-            cutsceneStartTime = Date.now();
-            lastCutsceneTypedIndex = -1;
-        } else if (cutsceneTextIndex >= CUTSCENE_TEXT.length) {
+        // Tap advances to next level after typing is done
+        if (cutsceneTextIndex >= CUTSCENE_TEXT.length) {
             initLevel(currentLevel);
         }
         return;
@@ -1592,7 +1578,7 @@ document.addEventListener('keydown', function(e) {
                 if (currentLevel === CUTSCENE_AFTER_LEVEL) {
                     currentLevel++;
                     gameState = STATES.CUTSCENE;
-                    cutsceneStartTime = 0;
+                    cutsceneStartTime = Date.now(); // Auto-start typing
                     cutsceneTextIndex = 0;
                     lastCutsceneTypedIndex = -1;
                 } else {
@@ -1604,10 +1590,7 @@ document.addEventListener('keydown', function(e) {
                 victoryMusicPlayed = false;
             }
         } else if (gameState === STATES.CUTSCENE) {
-            if (cutsceneStartTime === 0) {
-                cutsceneStartTime = Date.now();
-                lastCutsceneTypedIndex = -1;
-            } else if (cutsceneTextIndex >= CUTSCENE_TEXT.length) {
+            if (cutsceneTextIndex >= CUTSCENE_TEXT.length) {
                 initLevel(currentLevel);
             }
         } else if (gameState === STATES.CELEBRATION) {
