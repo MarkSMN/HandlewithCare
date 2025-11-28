@@ -349,7 +349,7 @@ const DOUBLE_TAP_DELAY = 300;
 let celebrationStartTime = 0;
 let celebrationScrollY = 0;
 let victoryMusicPlayed = false;
-const SCROLL_SPEED = 40;
+const SCROLL_SPEED = 50;
 
 // Splash screen
 let splashStartTime = 0;
@@ -362,6 +362,12 @@ let splashImage = new Image();
 let splashImageLoaded = false;
 splashImage.onload = function() { splashImageLoaded = true; };
 splashImage.src = 'splash.png';
+
+// End scene image
+let endsceneImage = new Image();
+let endsceneImageLoaded = false;
+endsceneImage.onload = function() { endsceneImageLoaded = true; };
+endsceneImage.src = 'endscene.jpg';
 
 const CREDITS_TEXT = [
     "", "", "CONGRATULATIONS!", "", "",
@@ -1093,28 +1099,60 @@ function drawCelebration(deltaTime) {
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // Draw endscene image in top 1/3
+    const imageAreaHeight = Math.floor(canvas.height / 3);
+    if (endsceneImageLoaded) {
+        // Calculate dimensions to fill width while maintaining aspect ratio
+        const imgAspect = endsceneImage.width / endsceneImage.height;
+        const drawWidth = canvas.width;
+        const drawHeight = drawWidth / imgAspect;
+        const imgY = (imageAreaHeight - drawHeight) / 2;
+        
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(endsceneImage, 0, imgY, drawWidth, drawHeight);
+    }
+    
+    // Draw divider line below image
+    ctx.strokeStyle = COLORS.textDim;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(20, imageAreaHeight);
+    ctx.lineTo(canvas.width - 20, imageAreaHeight);
+    ctx.stroke();
+    
+    // Scrolling stars in credits area only
     const starTime = Date.now() / 50;
     ctx.fillStyle = '#333';
     for (let i = 0; i < 20; i++) {
         const x = (i * 73 + starTime) % canvas.width;
-        const y = (i * 47) % canvas.height;
+        const y = imageAreaHeight + ((i * 47) % (canvas.height - imageAreaHeight));
         ctx.fillRect(x, y, 2, 2);
     }
     
     celebrationScrollY += SCROLL_SPEED * deltaTime;
     
+    // Clip credits to bottom 2/3
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, imageAreaHeight, canvas.width, canvas.height - imageAreaHeight);
+    ctx.clip();
+    
     ctx.font = '12px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
     
     const lineHeight = 34;
+    const creditsAreaHeight = canvas.height - imageAreaHeight;
     const startY = canvas.height - celebrationScrollY;
     
     CREDITS_TEXT.forEach((line, index) => {
         const y = startY + index * lineHeight;
-        if (y > -30 && y < canvas.height + 30) {
+        if (y > imageAreaHeight - 30 && y < canvas.height + 30) {
             if (line === 'CONGRATULATIONS!') {
                 ctx.fillStyle = COLORS.text;
                 ctx.font = '18px "Press Start 2P", monospace';
+            } else if (line === 'YOU GOT THE JOB!') {
+                ctx.fillStyle = COLORS.crateValid;
+                ctx.font = '14px "Press Start 2P", monospace';
             } else if (line === '[TAP TO CONTINUE]') {
                 if (Math.floor(Date.now() / 500) % 2 === 0) {
                     ctx.fillStyle = COLORS.text;
@@ -1132,6 +1170,8 @@ function drawCelebration(deltaTime) {
             ctx.fillText(line, canvas.width / 2, y);
         }
     });
+    
+    ctx.restore();
 }
 
 let winSoundPlayed = false;
