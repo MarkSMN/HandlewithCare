@@ -305,7 +305,7 @@ const LEVELS = [
 ];
 
 // Game state
-let gameState = STATES.TITLE;
+let gameState = STATES.SPLASH;
 let currentLevel = 0;
 let timeRemaining = 0;
 let lastTime = 0;
@@ -1238,14 +1238,7 @@ function handleStart(e) {
     const pos = getEventPos(e);
     
     // Handle non-playing states
-    if (gameState === STATES.TITLE) {
-        // Go to splash screen first
-        gameState = STATES.SPLASH;
-        splashStartTime = 0;
-        splashTextIndex = 0;
-        lastTypedIndex = -1;
-        return;
-    } else if (gameState === STATES.SPLASH) {
+    if (gameState === STATES.SPLASH) {
         // Only advance if typewriter is done
         if (splashTextIndex >= SPLASH_TEXT.length) {
             initLevel(0);
@@ -1264,7 +1257,10 @@ function handleStart(e) {
         return;
     } else if (gameState === STATES.CELEBRATION) {
         currentLevel = 0;
-        gameState = STATES.TITLE;
+        gameState = STATES.SPLASH;
+        splashStartTime = 0;
+        splashTextIndex = 0;
+        lastTypedIndex = -1;
         return;
     } else if (gameState === STATES.LOSE) {
         loseSoundPlayed = false;
@@ -1344,11 +1340,7 @@ document.addEventListener('keydown', function(e) {
     if (e.code === 'Space') {
         e.preventDefault();
         initAudio();
-        if (gameState === STATES.TITLE) {
-            gameState = STATES.SPLASH;
-            splashStartTime = 0;
-            splashTextIndex = 0;
-        } else if (gameState === STATES.SPLASH) {
+        if (gameState === STATES.SPLASH) {
             if (splashTextIndex >= SPLASH_TEXT.length) {
                 initLevel(0);
             }
@@ -1363,7 +1355,10 @@ document.addEventListener('keydown', function(e) {
             }
         } else if (gameState === STATES.CELEBRATION) {
             currentLevel = 0;
-            gameState = STATES.TITLE;
+            gameState = STATES.SPLASH;
+            splashStartTime = 0;
+            splashTextIndex = 0;
+            lastTypedIndex = -1;
         } else if (gameState === STATES.LOSE) {
             loseSoundPlayed = false;
             initLevel(currentLevel);
@@ -1375,8 +1370,10 @@ document.addEventListener('keydown', function(e) {
     // K = skip to next level (debug/testing)
     if (e.code === 'KeyK') {
         initAudio();
-        // Skip title/splash to game
-        if (gameState === STATES.TITLE || gameState === STATES.SPLASH) {
+        // Skip splash to game
+        if (gameState === STATES.SPLASH) {
+            initLevel(0);
+        } else if (currentLevel < LEVELS.length - 1) {
             initLevel(0);
         } else if (currentLevel < LEVELS.length - 1) {
             currentLevel++;
