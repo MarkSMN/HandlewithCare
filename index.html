@@ -80,9 +80,9 @@
 <body>
     <div class="game-title">HANDLE WITH CARE</div>
     <div class="controls-hint">
-        <span>[TAP]</span> SELECT &nbsp;&nbsp; 
-        <span>[DRAG]</span> MOVE &nbsp;&nbsp; 
-        <span>[DOUBLE-TAP]</span> ROTATE &nbsp;&nbsp;
+        <span>[TAP]</span> SELECT &nbsp;&nbsp;&nbsp; 
+        <span>[DRAG]</span> MOVE<br>
+        <span>[DOUBLE-TAP]</span> ROTATE &nbsp;&nbsp;&nbsp;
         <span>[TAP SCREEN]</span> START
     </div>
     <div class="crt">
@@ -145,6 +145,7 @@ const VEHICLE_COLORS = [
 
 const STATES = {
     TITLE: 'title',
+    SPLASH: 'splash',
     TRUCK_ENTERING: 'entering',
     PLAYING: 'playing',
     TRUCK_WAITING: 'waiting',
@@ -160,94 +161,94 @@ const LEVELS = [
         name: "THE PICKUP",
         description: "Small piece for a client",
         truckType: "trunk",
-        truckWidth: 88,
-        truckHeight: 122,
+        truckWidth: 100,
+        truckHeight: 140,
         timeLimit: 60,
-        crates: [{ w: 61, h: 44, label: "PHOTO" }]
+        crates: [{ w: 70, h: 50, label: "PHOTO" }]
     },
     {
         name: "COLLECTOR'S RUN",
         description: "A few pieces uptown",
         truckType: "trunk",
-        truckWidth: 96,
-        truckHeight: 131,
+        truckWidth: 110,
+        truckHeight: 150,
         timeLimit: 60,
         crates: [
-            { w: 53, h: 39, label: "PRINT" },
-            { w: 61, h: 44, label: "FRAME" },
-            { w: 39, h: 32, label: "SMALL" }
+            { w: 60, h: 44, label: "PRINT" },
+            { w: 70, h: 50, label: "FRAME" },
+            { w: 44, h: 36, label: "SMALL" }
         ]
     },
     {
         name: "WEEKEND WARRIOR",
         description: "Pickup to the art fair",
         truckType: "pickup",
-        truckWidth: 122,
-        truckHeight: 192,
+        truckWidth: 140,
+        truckHeight: 220,
         timeLimit: 60,
         crates: [
-            { w: 70, h: 49, label: "CANVAS" },
-            { w: 61, h: 56, label: "SCULPT" },
-            { w: 79, h: 44, label: "PANEL" },
-            { w: 49, h: 35, label: "PRINT" }
+            { w: 80, h: 56, label: "CANVAS" },
+            { w: 70, h: 64, label: "SCULPT" },
+            { w: 90, h: 50, label: "PANEL" },
+            { w: 56, h: 40, label: "PRINT" }
         ]
     },
     {
         name: "GALLERY INSTALL",
         description: "Sprinter van, group show",
         truckType: "sprinter",
-        truckWidth: 158,
-        truckHeight: 262,
+        truckWidth: 180,
+        truckHeight: 300,
         timeLimit: 60,
         crates: [
-            { w: 88, h: 61, label: "LARGE" },
-            { w: 70, h: 49, label: "MED-1" },
-            { w: 70, h: 49, label: "MED-2" },
-            { w: 53, h: 39, label: "SM-1" },
-            { w: 53, h: 39, label: "SM-2" },
-            { w: 44, h: 32, label: "TINY" }
+            { w: 100, h: 70, label: "LARGE" },
+            { w: 80, h: 56, label: "MED-1" },
+            { w: 80, h: 56, label: "MED-2" },
+            { w: 60, h: 44, label: "SM-1" },
+            { w: 60, h: 44, label: "SM-2" },
+            { w: 50, h: 36, label: "TINY" }
         ]
     },
     {
         name: "BOX TRUCK BLUES",
         description: "Museum loan, careful!",
         truckType: "box",
-        truckWidth: 192,
-        truckHeight: 350,
+        truckWidth: 220,
+        truckHeight: 400,
         timeLimit: 60,
         crates: [
-            { w: 96, h: 67, label: "MAJOR" },
-            { w: 79, h: 56, label: "LRG-1" },
-            { w: 79, h: 56, label: "LRG-2" },
-            { w: 67, h: 46, label: "MED-A" },
-            { w: 67, h: 46, label: "MED-B" },
-            { w: 56, h: 39, label: "MED-C" },
-            { w: 49, h: 35, label: "SMALL" },
-            { w: 42, h: 32, label: "TINY1" },
-            { w: 42, h: 32, label: "TINY2" }
+            { w: 110, h: 76, label: "MAJOR" },
+            { w: 90, h: 64, label: "LRG-1" },
+            { w: 90, h: 64, label: "LRG-2" },
+            { w: 76, h: 52, label: "MED-A" },
+            { w: 76, h: 52, label: "MED-B" },
+            { w: 64, h: 44, label: "MED-C" },
+            { w: 56, h: 40, label: "SMALL" },
+            { w: 48, h: 36, label: "TINY1" },
+            { w: 48, h: 36, label: "TINY2" }
         ]
     },
     {
         name: "THE BIG MOVE",
         description: "53-footer. Big day.",
         truckType: "semi",
-        truckWidth: 245,
-        truckHeight: 560,
+        truckWidth: 280,
+        truckHeight: 640,
         timeLimit: 60,
         crates: [
-            { w: 122, h: 84, label: "MASSIVE" },
-            { w: 102, h: 70, label: "HUGE-1" },
-            { w: 102, h: 70, label: "HUGE-2" },
-            { w: 84, h: 58, label: "BIG-A" },
-            { w: 84, h: 58, label: "BIG-B" },
-            { w: 70, h: 49, label: "LRG-1" },
-            { w: 70, h: 49, label: "LRG-2" },
-            { w: 56, h: 39, label: "MED-1" },
-            { w: 56, h: 39, label: "MED-2" },
-            { w: 56, h: 39, label: "MED-3" },
-            { w: 46, h: 32, label: "SM-1" },
-            { w: 46, h: 32, label: "SM-2" },
-            { w: 39, h: 28, label: "TINY" }
+            { w: 140, h: 96, label: "MASSIVE" },
+            { w: 116, h: 80, label: "HUGE-1" },
+            { w: 116, h: 80, label: "HUGE-2" },
+            { w: 96, h: 66, label: "BIG-A" },
+            { w: 96, h: 66, label: "BIG-B" },
+            { w: 80, h: 56, label: "LRG-1" },
+            { w: 80, h: 56, label: "LRG-2" },
+            { w: 64, h: 44, label: "MED-1" },
+            { w: 64, h: 44, label: "MED-2" },
+            { w: 64, h: 44, label: "MED-3" },
+            { w: 52, h: 36, label: "SM-1" },
+            { w: 52, h: 36, label: "SM-2" },
+            { w: 44, h: 32, label: "TINY" }
         ]
     },
     {
@@ -255,19 +256,19 @@ const LEVELS = [
         description: "Two trucks. Don't ask.",
         truckType: "combo",
         trucks: [
-            { type: "trunk", width: 88, height: 114, x: 30 },
-            { type: "sprinter", width: 149, height: 245, x: 300 }
+            { type: "trunk", width: 100, height: 130, x: 20 },
+            { type: "sprinter", width: 170, height: 280, x: 280 }
         ],
         timeLimit: 60,
         crates: [
-            { w: 79, h: 56, label: "LARGE" },
-            { w: 63, h: 46, label: "MED-1" },
-            { w: 63, h: 46, label: "MED-2" },
-            { w: 49, h: 35, label: "SM-1" },
-            { w: 49, h: 35, label: "SM-2" },
-            { w: 42, h: 32, label: "TINY1" },
-            { w: 42, h: 32, label: "TINY2" },
-            { w: 35, h: 26, label: "MINI" }
+            { w: 90, h: 64, label: "LARGE" },
+            { w: 72, h: 52, label: "MED-1" },
+            { w: 72, h: 52, label: "MED-2" },
+            { w: 56, h: 40, label: "SM-1" },
+            { w: 56, h: 40, label: "SM-2" },
+            { w: 48, h: 36, label: "TINY1" },
+            { w: 48, h: 36, label: "TINY2" },
+            { w: 40, h: 30, label: "MINI" }
         ]
     },
     {
@@ -275,30 +276,30 @@ const LEVELS = [
         description: "Two big trucks. Legend.",
         truckType: "double",
         trucks: [
-            { type: "box", width: 175, height: 315, x: 10 },
-            { type: "box", width: 175, height: 315, x: 280 }
+            { type: "box", width: 200, height: 360, x: 5 },
+            { type: "box", width: 200, height: 360, x: 270 }
         ],
         timeLimit: 60,
         crates: [
-            { w: 91, h: 63, label: "MONUMENT" },
-            { w: 79, h: 53, label: "EPIC-1" },
-            { w: 79, h: 53, label: "EPIC-2" },
-            { w: 67, h: 46, label: "MAJOR-A" },
-            { w: 67, h: 46, label: "MAJOR-B" },
-            { w: 56, h: 39, label: "BIG-1" },
-            { w: 56, h: 39, label: "BIG-2" },
-            { w: 56, h: 39, label: "BIG-3" },
-            { w: 49, h: 35, label: "LRG-1" },
-            { w: 49, h: 35, label: "LRG-2" },
-            { w: 49, h: 35, label: "LRG-3" },
-            { w: 42, h: 30, label: "MED-1" },
-            { w: 42, h: 30, label: "MED-2" },
-            { w: 42, h: 30, label: "MED-3" },
-            { w: 42, h: 30, label: "MED-4" },
-            { w: 35, h: 25, label: "SM-1" },
-            { w: 35, h: 25, label: "SM-2" },
-            { w: 32, h: 21, label: "TINY1" },
-            { w: 32, h: 21, label: "TINY2" }
+            { w: 104, h: 72, label: "MONUMENT" },
+            { w: 90, h: 60, label: "EPIC-1" },
+            { w: 90, h: 60, label: "EPIC-2" },
+            { w: 76, h: 52, label: "MAJOR-A" },
+            { w: 76, h: 52, label: "MAJOR-B" },
+            { w: 64, h: 44, label: "BIG-1" },
+            { w: 64, h: 44, label: "BIG-2" },
+            { w: 64, h: 44, label: "BIG-3" },
+            { w: 56, h: 40, label: "LRG-1" },
+            { w: 56, h: 40, label: "LRG-2" },
+            { w: 56, h: 40, label: "LRG-3" },
+            { w: 48, h: 34, label: "MED-1" },
+            { w: 48, h: 34, label: "MED-2" },
+            { w: 48, h: 34, label: "MED-3" },
+            { w: 48, h: 34, label: "MED-4" },
+            { w: 40, h: 28, label: "SM-1" },
+            { w: 40, h: 28, label: "SM-2" },
+            { w: 36, h: 24, label: "TINY1" },
+            { w: 36, h: 24, label: "TINY2" }
         ]
     }
 ];
@@ -333,6 +334,17 @@ let celebrationStartTime = 0;
 let celebrationScrollY = 0;
 let victoryMusicPlayed = false;
 const SCROLL_SPEED = 40;
+
+// Splash screen
+let splashStartTime = 0;
+let splashTextIndex = 0;
+let splashTextTimer = 0;
+const SPLASH_TEXT = "Looks like you're clocking into the weight room! Good luck!";
+const TYPEWRITER_SPEED = 50; // ms per character
+let splashImage = new Image();
+let splashImageLoaded = false;
+splashImage.onload = function() { splashImageLoaded = true; };
+splashImage.src = 'splash.png';
 
 const CREDITS_TEXT = [
     "", "", "CONGRATULATIONS!", "", "",
@@ -884,6 +896,78 @@ function drawTitleScreen() {
     }
 }
 
+function drawSplashScreen() {
+    ctx.fillStyle = COLORS.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw image centered
+    if (splashImageLoaded) {
+        const imgSize = 300;
+        const imgX = (canvas.width - imgSize) / 2;
+        const imgY = 150;
+        
+        // Draw pixelated (disable smoothing)
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(splashImage, imgX, imgY, imgSize, imgSize);
+    }
+    
+    // Typewriter text
+    const now = Date.now();
+    if (splashStartTime === 0) splashStartTime = now;
+    
+    const elapsed = now - splashStartTime;
+    splashTextIndex = Math.min(Math.floor(elapsed / TYPEWRITER_SPEED), SPLASH_TEXT.length);
+    
+    const displayText = SPLASH_TEXT.substring(0, splashTextIndex);
+    
+    ctx.fillStyle = COLORS.text;
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    
+    // Word wrap the text
+    const words = displayText.split(' ');
+    let lines = [];
+    let currentLine = '';
+    const maxWidth = 400;
+    
+    for (let word of words) {
+        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+        } else {
+            currentLine = testLine;
+        }
+    }
+    if (currentLine) lines.push(currentLine);
+    
+    const lineHeight = 24;
+    const textStartY = 520;
+    lines.forEach((line, i) => {
+        ctx.fillText(line, canvas.width/2, textStartY + i * lineHeight);
+    });
+    
+    // Blinking cursor at end of text
+    if (splashTextIndex < SPLASH_TEXT.length) {
+        if (Math.floor(now / 300) % 2 === 0) {
+            const lastLine = lines[lines.length - 1] || '';
+            const cursorX = canvas.width/2 + ctx.measureText(lastLine).width/2 + 5;
+            const cursorY = textStartY + (lines.length - 1) * lineHeight;
+            ctx.fillRect(cursorX, cursorY - 8, 8, 10);
+        }
+    }
+    
+    // Show "tap to continue" after text is done
+    if (splashTextIndex >= SPLASH_TEXT.length) {
+        if (Math.floor(now / 500) % 2 === 0) {
+            ctx.fillStyle = COLORS.textDim;
+            ctx.font = '8px "Press Start 2P", monospace';
+            ctx.fillText('[TAP TO CONTINUE]', canvas.width/2, 700);
+        }
+    }
+}
+
 function drawWinScreen() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -987,6 +1071,8 @@ function gameLoop(timestamp) {
         drawTitleScreen();
         winSoundPlayed = false;
         loseSoundPlayed = false;
+    } else if (gameState === STATES.SPLASH) {
+        drawSplashScreen();
     } else if (gameState === STATES.TRUCK_ENTERING) {
         drawBackground();
         drawWarehouse();
@@ -1134,7 +1220,16 @@ function handleStart(e) {
     
     // Handle non-playing states
     if (gameState === STATES.TITLE) {
-        initLevel(0);
+        // Go to splash screen first
+        gameState = STATES.SPLASH;
+        splashStartTime = 0;
+        splashTextIndex = 0;
+        return;
+    } else if (gameState === STATES.SPLASH) {
+        // Only advance if typewriter is done
+        if (splashTextIndex >= SPLASH_TEXT.length) {
+            initLevel(0);
+        }
         return;
     } else if (gameState === STATES.WIN) {
         winSoundPlayed = false;
@@ -1230,7 +1325,13 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         initAudio();
         if (gameState === STATES.TITLE) {
-            initLevel(0);
+            gameState = STATES.SPLASH;
+            splashStartTime = 0;
+            splashTextIndex = 0;
+        } else if (gameState === STATES.SPLASH) {
+            if (splashTextIndex >= SPLASH_TEXT.length) {
+                initLevel(0);
+            }
         } else if (gameState === STATES.WIN) {
             winSoundPlayed = false;
             if (currentLevel < LEVELS.length - 1) {
@@ -1254,7 +1355,10 @@ document.addEventListener('keydown', function(e) {
     // K = skip to next level (debug/testing)
     if (e.code === 'KeyK') {
         initAudio();
-        if (currentLevel < LEVELS.length - 1) {
+        // Skip title/splash to game
+        if (gameState === STATES.TITLE || gameState === STATES.SPLASH) {
+            initLevel(0);
+        } else if (currentLevel < LEVELS.length - 1) {
             currentLevel++;
             initLevel(currentLevel);
         } else {
