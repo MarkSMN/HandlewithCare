@@ -385,7 +385,6 @@ const CUTSCENE_AFTER_LEVEL = 3; // After level 4 (0-indexed)
 
 const CREDITS_TEXT = [
     "", "", "CONGRATULATIONS!", "", "",
-    "YOU GOT THE JOB!", "", "",
     "- - - - - - - -", "", "",
     "The galleries are closing,", "the mid-tier collectors are", "'taking a pause,'", "",
     "and half the artists", "you're shipping", "have day jobs now.", "", "",
@@ -1255,9 +1254,6 @@ function drawCelebration(deltaTime) {
             if (line === 'CONGRATULATIONS!') {
                 ctx.fillStyle = COLORS.text;
                 ctx.font = '18px "Press Start 2P", monospace';
-            } else if (line === 'YOU GOT THE JOB!') {
-                ctx.fillStyle = COLORS.crateValid;
-                ctx.font = '14px "Press Start 2P", monospace';
             } else if (line === '[TAP TO CONTINUE]') {
                 if (Math.floor(Date.now() / 500) % 2 === 0) {
                     ctx.fillStyle = COLORS.text;
