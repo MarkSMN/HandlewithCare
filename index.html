@@ -921,10 +921,20 @@ function drawSplashScreen() {
         ctx.drawImage(splashImage, imgX, imgY, imgSize, imgSize);
     }
     
-    // Typewriter text
     const now = Date.now();
-    if (splashStartTime === 0) splashStartTime = now;
     
+    // If typing hasn't started yet, show tap prompt
+    if (splashStartTime === 0) {
+        if (Math.floor(now / 500) % 2 === 0) {
+            ctx.fillStyle = COLORS.text;
+            ctx.font = '12px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('[TAP TO START]', canvas.width/2, 720);
+        }
+        return;
+    }
+    
+    // Typewriter text
     const elapsed = now - splashStartTime;
     splashTextIndex = Math.min(Math.floor(elapsed / TYPEWRITER_SPEED), SPLASH_TEXT.length);
     
@@ -1239,8 +1249,13 @@ function handleStart(e) {
     
     // Handle non-playing states
     if (gameState === STATES.SPLASH) {
-        // Only advance if typewriter is done
-        if (splashTextIndex >= SPLASH_TEXT.length) {
+        // First tap starts the typing, second tap (after done) starts game
+        if (splashStartTime === 0) {
+            // Start typing on first tap
+            splashStartTime = Date.now();
+            lastTypedIndex = -1;
+        } else if (splashTextIndex >= SPLASH_TEXT.length) {
+            // Start game after typing is done
             initLevel(0);
         }
         return;
@@ -1341,7 +1356,10 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         initAudio();
         if (gameState === STATES.SPLASH) {
-            if (splashTextIndex >= SPLASH_TEXT.length) {
+            if (splashStartTime === 0) {
+                splashStartTime = Date.now();
+                lastTypedIndex = -1;
+            } else if (splashTextIndex >= SPLASH_TEXT.length) {
                 initLevel(0);
             }
         } else if (gameState === STATES.WIN) {
