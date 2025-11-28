@@ -340,7 +340,8 @@ let splashStartTime = 0;
 let splashTextIndex = 0;
 let splashTextTimer = 0;
 const SPLASH_TEXT = "Looks like you're clocking into the weight room! Good luck!";
-const TYPEWRITER_SPEED = 50; // ms per character
+const TYPEWRITER_SPEED = 100; // ms per character (slower)
+let lastTypedIndex = -1; // Track for sound
 let splashImage = new Image();
 let splashImageLoaded = false;
 splashImage.onload = function() { splashImageLoaded = true; };
@@ -460,6 +461,15 @@ function playSound(type) {
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.2);
+            break;
+        case 'type':
+            // Short clicky typewriter sound
+            osc.frequency.value = 800 + Math.random() * 200;
+            osc.type = 'square';
+            gain.gain.value = 0.06;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.03);
             break;
     }
 }
@@ -900,11 +910,11 @@ function drawSplashScreen() {
     ctx.fillStyle = COLORS.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw image centered
+    // Draw image full width
     if (splashImageLoaded) {
-        const imgSize = 300;
-        const imgX = (canvas.width - imgSize) / 2;
-        const imgY = 150;
+        const imgSize = canvas.width; // Full width
+        const imgX = 0;
+        const imgY = 80;
         
         // Draw pixelated (disable smoothing)
         ctx.imageSmoothingEnabled = false;
@@ -918,17 +928,26 @@ function drawSplashScreen() {
     const elapsed = now - splashStartTime;
     splashTextIndex = Math.min(Math.floor(elapsed / TYPEWRITER_SPEED), SPLASH_TEXT.length);
     
+    // Play typing sound when new character appears
+    if (splashTextIndex > lastTypedIndex && splashTextIndex <= SPLASH_TEXT.length) {
+        // Only play sound for non-space characters
+        if (SPLASH_TEXT[splashTextIndex - 1] !== ' ') {
+            playSound('type');
+        }
+        lastTypedIndex = splashTextIndex;
+    }
+    
     const displayText = SPLASH_TEXT.substring(0, splashTextIndex);
     
     ctx.fillStyle = COLORS.text;
-    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.font = '16px "Press Start 2P", monospace'; // 2x bigger
     ctx.textAlign = 'center';
     
     // Word wrap the text
     const words = displayText.split(' ');
     let lines = [];
     let currentLine = '';
-    const maxWidth = 400;
+    const maxWidth = 480;
     
     for (let word of words) {
         const testLine = currentLine + (currentLine ? ' ' : '') + word;
@@ -942,8 +961,8 @@ function drawSplashScreen() {
     }
     if (currentLine) lines.push(currentLine);
     
-    const lineHeight = 24;
-    const textStartY = 520;
+    const lineHeight = 40; // Bigger line height for bigger text
+    const textStartY = 660;
     lines.forEach((line, i) => {
         ctx.fillText(line, canvas.width/2, textStartY + i * lineHeight);
     });
@@ -954,7 +973,7 @@ function drawSplashScreen() {
             const lastLine = lines[lines.length - 1] || '';
             const cursorX = canvas.width/2 + ctx.measureText(lastLine).width/2 + 5;
             const cursorY = textStartY + (lines.length - 1) * lineHeight;
-            ctx.fillRect(cursorX, cursorY - 8, 8, 10);
+            ctx.fillRect(cursorX, cursorY - 12, 12, 16);
         }
     }
     
@@ -962,8 +981,8 @@ function drawSplashScreen() {
     if (splashTextIndex >= SPLASH_TEXT.length) {
         if (Math.floor(now / 500) % 2 === 0) {
             ctx.fillStyle = COLORS.textDim;
-            ctx.font = '8px "Press Start 2P", monospace';
-            ctx.fillText('[TAP TO CONTINUE]', canvas.width/2, 700);
+            ctx.font = '10px "Press Start 2P", monospace';
+            ctx.fillText('[TAP TO CONTINUE]', canvas.width/2, 800);
         }
     }
 }
@@ -1224,6 +1243,7 @@ function handleStart(e) {
         gameState = STATES.SPLASH;
         splashStartTime = 0;
         splashTextIndex = 0;
+        lastTypedIndex = -1;
         return;
     } else if (gameState === STATES.SPLASH) {
         // Only advance if typewriter is done
