@@ -337,7 +337,7 @@ let warehouseArea = { x: 0, y: 660, width: 540, height: 200 };
 let animationProgress = 0;
 let lastBeepTime = 0;
 let waitTimer = 0;
-const BEEP_INTERVAL = 400;
+const BEEP_INTERVAL = 850; // 600ms beep + 250ms pause
 const TRUCK_SPEED = 200;
 const WAIT_DELAY = 1.0;
 
@@ -345,6 +345,9 @@ const WAIT_DELAY = 1.0;
 let lastTapTime = 0;
 let lastTapCrate = null;
 const DOUBLE_TAP_DELAY = 300;
+
+// Screen shake
+let screenShake = { x: 0, y: 0, intensity: 0 };
 
 // Celebration
 let celebrationStartTime = 0;
@@ -449,12 +452,35 @@ function playSound(type) {
             osc.stop(audioCtx.currentTime + 0.05);
             break;
         case 'beep':
-            osc.frequency.value = 1000;
+            // 8-bit retro backup beep with pulsing warble
+            const beepDuration = 0.6;
+            const pulseRate = 8; // Pulses per second
+            
+            osc.frequency.value = 950;
             osc.type = 'square';
-            gain.gain.value = 0.15;
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            
+            // Create a second oscillator for the pulse/warble effect
+            const lfo = audioCtx.createOscillator();
+            const lfoGain = audioCtx.createGain();
+            
+            lfo.frequency.value = pulseRate;
+            lfo.type = 'square';
+            lfoGain.gain.value = 0.06; // Pulse depth
+            
+            // Connect LFO to modulate the main gain
+            lfo.connect(lfoGain);
+            lfoGain.connect(gain.gain);
+            
+            gain.gain.value = 0.08;
+            
+            // Sharp cutoff for NES-style edges
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime + beepDuration - 0.02);
+            gain.gain.setValueAtTime(0, audioCtx.currentTime + beepDuration);
+            
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
+            lfo.start();
+            osc.stop(audioCtx.currentTime + beepDuration);
+            lfo.stop(audioCtx.currentTime + beepDuration);
             break;
         case 'engine':
             osc.frequency.value = 80;
@@ -598,10 +624,17 @@ class Crate {
                 lightColor = '#f5e87a';
                 darkColor = '#8b7a20';
             }
+            
+            // Add glow effect for selected crate
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = baseColor;
         }
         
         ctx.fillStyle = baseColor;
         ctx.fillRect(this.x, this.y, w, h);
+        
+        // Reset shadow after main fill
+        ctx.shadowBlur = 0;
         
         ctx.fillStyle = lightColor;
         ctx.fillRect(this.x, this.y, w, 2);
@@ -870,13 +903,34 @@ function isInTruck(crate) {
     return false;
 }
 
+function updateScreenShake(deltaTime) {
+    if (screenShake.intensity > 0) {
+        screenShake.x = (Math.random() * 2 - 1) * screenShake.intensity;
+        screenShake.y = (Math.random() * 2 - 1) * screenShake.intensity;
+        screenShake.intensity = Math.max(0, screenShake.intensity - deltaTime * 15);
+    } else {
+        screenShake.x = 0;
+        screenShake.y = 0;
+    }
+}
+
+function triggerScreenShake(intensity = 3) {
+    screenShake.intensity = Math.max(screenShake.intensity, intensity);
+}
+
 function updateCrateValidity() {
     crates.forEach(crate => {
         crate.loaded = isInTruck(crate);
         let collides = false;
         crates.forEach(other => {
-            if (cratesCollide(crate, other)) collides = true;
+            if (cratesCollide(crate, other)) {
+                collides = true;
+            }
         });
+        // Trigger shake if crate just became invalid
+        if (collides && crate.valid && crate === selectedCrate) {
+            triggerScreenShake(4);
+        }
         crate.valid = !collides;
     });
 }
@@ -1283,7 +1337,14 @@ function gameLoop(timestamp) {
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
     
+    // Update screen shake
+    updateScreenShake(deltaTime);
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Apply screen shake offset
+    ctx.save();
+    ctx.translate(screenShake.x, screenShake.y);
     
     if (gameState === STATES.TITLE) {
         drawTitleScreen();
@@ -1404,6 +1465,9 @@ function gameLoop(timestamp) {
         drawUI();
         drawLoseScreen();
     }
+    
+    // Restore from screen shake transform
+    ctx.restore();
     
     requestAnimationFrame(gameLoop);
 }
