@@ -379,12 +379,33 @@ let poodleImageLoaded = false;
 poodleImage.onload = function() { poodleImageLoaded = true; };
 poodleImage.src = 'poodle.jpg';
 
+// Salon wall cutscene image
+let salonwallImage = new Image();
+let salonwallImageLoaded = false;
+salonwallImage.onload = function() { salonwallImageLoaded = true; };
+salonwallImage.src = 'salonwall.jpg';
+
 // Cutscene state
 let cutsceneStartTime = 0;
 let cutsceneTextIndex = 0;
 let lastCutsceneTypedIndex = -1;
-const CUTSCENE_TEXT = "The collector loves the color! Keep the art coming!!";
-const CUTSCENE_AFTER_LEVEL = 3; // After level 4 (0-indexed)
+let currentCutsceneText = "";
+let currentCutsceneImage = null;
+let currentCutsceneImageLoaded = false;
+
+// Cutscene definitions - after which level (0-indexed) and what to show
+const CUTSCENES = {
+    1: { // After level 2 (0-indexed = 1)
+        text: "Finished the first salon wall of the day!",
+        getImage: () => salonwallImage,
+        isLoaded: () => salonwallImageLoaded
+    },
+    3: { // After level 4 (0-indexed = 3)
+        text: "The collector loves the color! Keep the art coming!!",
+        getImage: () => poodleImage,
+        isLoaded: () => poodleImageLoaded
+    }
+};
 
 const CREDITS_TEXT = [
     "", "", "CONGRATULATIONS!", "", "",
@@ -416,10 +437,18 @@ function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
+    // Resume AudioContext if suspended (required for mobile)
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
 }
 
 function playSound(type) {
     if (!audioCtx) return;
+    // Ensure audio context is running
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
     
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -1174,9 +1203,11 @@ function drawCutscene() {
     ctx.textAlign = 'center';
     ctx.fillText('BONUS CHECK-IN!', canvas.width/2, 40);
     
-    // Draw poodle image - full width in upper portion
-    if (poodleImageLoaded) {
-        const imgAspect = poodleImage.width / poodleImage.height;
+    // Draw current cutscene image - full width in upper portion
+    const cutsceneData = CUTSCENES[currentLevel - 1]; // -1 because we already incremented
+    if (cutsceneData && cutsceneData.isLoaded()) {
+        const img = cutsceneData.getImage();
+        const imgAspect = img.width / img.height;
         const drawWidth = canvas.width;
         const drawHeight = drawWidth / imgAspect;
         const maxHeight = 500;
@@ -1186,24 +1217,24 @@ function drawCutscene() {
         const imgY = 60;
         
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(poodleImage, imgX, imgY, finalWidth, finalHeight);
+        ctx.drawImage(img, imgX, imgY, finalWidth, finalHeight);
     }
     
     const now = Date.now();
     
     // Typewriter text
     const elapsed = now - cutsceneStartTime;
-    cutsceneTextIndex = Math.min(Math.floor(elapsed / TYPEWRITER_SPEED), CUTSCENE_TEXT.length);
+    cutsceneTextIndex = Math.min(Math.floor(elapsed / TYPEWRITER_SPEED), currentCutsceneText.length);
     
     // Play typing sound when new character appears
-    if (cutsceneTextIndex > lastCutsceneTypedIndex && cutsceneTextIndex <= CUTSCENE_TEXT.length) {
-        if (CUTSCENE_TEXT[cutsceneTextIndex - 1] !== ' ') {
+    if (cutsceneTextIndex > lastCutsceneTypedIndex && cutsceneTextIndex <= currentCutsceneText.length) {
+        if (currentCutsceneText[cutsceneTextIndex - 1] !== ' ') {
             playSound('type');
         }
         lastCutsceneTypedIndex = cutsceneTextIndex;
     }
     
-    const displayText = CUTSCENE_TEXT.substring(0, cutsceneTextIndex);
+    const displayText = currentCutsceneText.substring(0, cutsceneTextIndex);
     
     ctx.fillStyle = COLORS.text;
     ctx.font = '14px "Press Start 2P", monospace';
@@ -1234,7 +1265,7 @@ function drawCutscene() {
     });
     
     // Blinking cursor at end of text
-    if (cutsceneTextIndex < CUTSCENE_TEXT.length) {
+    if (cutsceneTextIndex < currentCutsceneText.length) {
         if (Math.floor(now / 300) % 2 === 0) {
             const lastLine = lines[lines.length - 1] || '';
             const cursorX = canvas.width/2 + ctx.measureText(lastLine).width/2 + 5;
@@ -1244,7 +1275,7 @@ function drawCutscene() {
     }
     
     // Show "tap to continue" after text is done
-    if (cutsceneTextIndex >= CUTSCENE_TEXT.length) {
+    if (cutsceneTextIndex >= currentCutsceneText.length) {
         if (Math.floor(now / 500) % 2 === 0) {
             ctx.fillStyle = COLORS.textDim;
             ctx.font = '10px "Press Start 2P", monospace';
@@ -1518,7 +1549,8 @@ function handleStart(e) {
         winSoundPlayed = false;
         if (currentLevel < LEVELS.length - 1) {
             // Check if we should show cutscene after this level
-            if (currentLevel === CUTSCENE_AFTER_LEVEL) {
+            if (CUTSCENES[currentLevel]) {
+                currentCutsceneText = CUTSCENES[currentLevel].text;
                 currentLevel++;
                 gameState = STATES.CUTSCENE;
                 cutsceneStartTime = Date.now(); // Auto-start typing
@@ -1536,7 +1568,7 @@ function handleStart(e) {
         return;
     } else if (gameState === STATES.CUTSCENE) {
         // Tap advances to next level after typing is done
-        if (cutsceneTextIndex >= CUTSCENE_TEXT.length) {
+        if (cutsceneTextIndex >= currentCutsceneText.length) {
             initLevel(currentLevel);
         }
         return;
@@ -1635,7 +1667,8 @@ document.addEventListener('keydown', function(e) {
         } else if (gameState === STATES.WIN) {
             winSoundPlayed = false;
             if (currentLevel < LEVELS.length - 1) {
-                if (currentLevel === CUTSCENE_AFTER_LEVEL) {
+                if (CUTSCENES[currentLevel]) {
+                    currentCutsceneText = CUTSCENES[currentLevel].text;
                     currentLevel++;
                     gameState = STATES.CUTSCENE;
                     cutsceneStartTime = Date.now(); // Auto-start typing
@@ -1650,7 +1683,7 @@ document.addEventListener('keydown', function(e) {
                 victoryMusicPlayed = false;
             }
         } else if (gameState === STATES.CUTSCENE) {
-            if (cutsceneTextIndex >= CUTSCENE_TEXT.length) {
+            if (cutsceneTextIndex >= currentCutsceneText.length) {
                 initLevel(currentLevel);
             }
         } else if (gameState === STATES.CELEBRATION) {
