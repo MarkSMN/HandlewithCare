@@ -385,6 +385,12 @@ let salonwallImageLoaded = false;
 salonwallImage.onload = function() { salonwallImageLoaded = true; };
 salonwallImage.src = 'salonwall.jpg';
 
+// Horse cutscene image
+let horseImage = new Image();
+let horseImageLoaded = false;
+horseImage.onload = function() { horseImageLoaded = true; };
+horseImage.src = 'horse.jpg';
+
 // Cutscene state
 let cutsceneStartTime = 0;
 let cutsceneTextIndex = 0;
@@ -396,14 +402,19 @@ let currentCutsceneImageLoaded = false;
 // Cutscene definitions - after which level (0-indexed) and what to show
 const CUTSCENES = {
     1: { // After level 2 (0-indexed = 1)
-        text: "Hey Boss,  I think they want everything moved down an inch or two! Hope everything is going ok in the warehouse",
+        text: "Finished the first salon wall of the day!",
         getImage: () => salonwallImage,
         isLoaded: () => salonwallImageLoaded
     },
     3: { // After level 4 (0-indexed = 3)
-        text: "The collector loves the color, but says she thought it would look taller in the space.",
+        text: "The collector loves the color! Keep the art coming!!",
         getImage: () => poodleImage,
         isLoaded: () => poodleImageLoaded
+    },
+    5: { // After level 6 (0-indexed = 5)
+        text: "Hate to bother you, but I think we're going to need the left-handed crate stretcher!",
+        getImage: () => horseImage,
+        isLoaded: () => horseImageLoaded
     }
 };
 
@@ -426,7 +437,7 @@ const CREDITS_TEXT = [
     "- - - - - - - -", "", "",
     "WELCOME TO THE ART WORLD", "", "The market is volatile.", "", "The trucks must roll.", "", "", "", "",
     "- - - - - - - -", "", "",
-    "MARK SCHOENING 2025", "", "", "",
+    "MARK SCHOENING 2025", "", "", "","SECRET PHRASE A Little to the left"
     "", "", "", "[TAP TO CONTINUE]", "", "", ""
 ];
 
