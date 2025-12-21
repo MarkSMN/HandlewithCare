@@ -175,7 +175,7 @@ const STATES = {
 // Scaled levels for portrait - trucks come from TOP, warehouse at BOTTOM
 const LEVELS = [
     {
-        name: "THE PICKUP",
+        name: "6AM CALL TIME",
         description: "Small piece for a client",
         truckType: "trunk",
         truckWidth: 100,
@@ -184,7 +184,7 @@ const LEVELS = [
         crates: [{ w: 70, h: 50, label: "BANKSY" }]
     },
     {
-        name: "COLLECTOR'S RUN",
+        name: "WHITE GLOVES",
         description: "A few pieces uptown",
         truckType: "trunk",
         truckWidth: 110,
@@ -197,7 +197,7 @@ const LEVELS = [
         ]
     },
     {
-        name: "WEEKEND WARRIOR",
+        name: "BOOTH 247",
         description: "Pickup to the art fair",
         truckType: "pickup",
         truckWidth: 140,
@@ -227,7 +227,7 @@ const LEVELS = [
         ]
     },
     {
-        name: "BOX TRUCK BLUES",
+        name: "MUSEUM LOAN",
         description: "Museum loan, careful!",
         truckType: "box",
         truckWidth: 220,
@@ -246,7 +246,7 @@ const LEVELS = [
         ]
     },
     {
-        name: "THE BIG MOVE",
+        name: "ESTATE SALE",
         description: "53-footer. Big day.",
         truckType: "semi",
         truckWidth: 280,
@@ -269,7 +269,7 @@ const LEVELS = [
         ]
     },
     {
-        name: "CHAOS MODE",
+        name: "DOUBLE BOOKED",
         description: "Two trucks. Don't ask.",
         truckType: "combo",
         trucks: [
@@ -289,7 +289,7 @@ const LEVELS = [
         ]
     },
     {
-        name: "MIAMI MADNESS",
+        name: "VIP PREVIEW",
         description: "Two big trucks. Legend.",
         truckType: "double",
         trucks: [
@@ -332,6 +332,19 @@ let selectedCrate = null;
 let dragOffset = { x: 0, y: 0 };
 let isDragging = false;
 let warehouseArea = { x: 0, y: 660, width: 540, height: 200 };
+
+// Nonsensical scoring system
+let currentScore = 0;
+const LEVEL_SCORES = [
+    4720,      // Level 1
+    18943,     // Level 2
+    47291,     // Level 3
+    124847,    // Level 4
+    387420,    // Level 5
+    847293,    // Level 6
+    2847291,   // Level 7 - "HIGH SCORE"
+    14382047   // Level 8 - "NEW HIGH SCORE!!"
+];
 
 // Animation state
 let animationProgress = 0;
@@ -402,7 +415,7 @@ let currentCutsceneImageLoaded = false;
 // Cutscene definitions - after which level (0-indexed) and what to show
 const CUTSCENES = {
     1: { // After level 2 (0-indexed = 1)
-        text: "Hey Boss, They decided everything needs to come down 2 inches!",
+        text: "Finished the first salon wall of the day!",
         getImage: () => salonwallImage,
         isLoaded: () => salonwallImageLoaded
     },
@@ -419,17 +432,11 @@ const CUTSCENES = {
 };
 
 const CREDITS_TEXT = [
-    "", "", "CONGRATULATIONS!", "", "",
+    "", "", "Way to handle yourself", "today, big dog!", "", "",
     "- - - - - - - -", "", "",
     "The galleries are closing,", "the mid-tier collectors are", "'taking a pause,'", "",
     "and half the artists", "you're shipping", "have day jobs now.", "", "",
     "But someone still", "needs to move the Serras.", "", "",
-    "- - - - - - - -", "", "",
-    "Fair season is here.", "", "The mega-galleries have rented", "their usual aircraft hangars.", "",
-    "The VIP lounges are stocked", "with champagne no one", "can afford anymore.", "", "",
-    "And you?", "", "You're the one making sure", "a $40 million balloon dog", "doesn't get scratched", "by a forklift.", "", "",
-    "- - - - - - - -", "", "",
-    "The art advisors are", "'cautiously optimistic.'", "", "The auction estimates", "are 'flexible.'", "", "Your back is not.", "", "",
     "- - - - - - - -", "", "",
     "But here's the thing:", "", "Paintings don't", "load themselves.", "", "Sculptures don't", "bubble wrap themselves.", "", "",
     "And when that crate", "marked IDENTIFIABLE", "arrives at 6am", "with no paperwork", "and a nervous gallerist...", "", "you don't ask questions.", "", "",
@@ -437,7 +444,7 @@ const CREDITS_TEXT = [
     "- - - - - - - -", "", "",
     "WELCOME TO THE ART WORLD", "", "The market is volatile.", "", "The trucks must roll.", "", "", "", "",
     "- - - - - - - -", "", "",
-    "MARK SCHOENING 2025", "", "", "","SECRET PHRASE A little to the left",
+    "MARK SCHOENING 2025", "", "", "",
     "", "", "", "[TAP TO CONTINUE]", "", "", ""
 ];
 
@@ -1008,9 +1015,9 @@ function drawWarehouse() {
     ctx.fillRect(20, warehouseArea.y - 4, warehouseArea.width - 40, 6);
     
     ctx.fillStyle = COLORS.textDim;
-    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.font = '14px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('WAREHOUSE', canvas.width/2, warehouseArea.y + warehouseArea.height - 8);
+    ctx.fillText('WAREHOUSE', canvas.width/2, warehouseArea.y + warehouseArea.height - 10);
 }
 
 function drawUI() {
@@ -1167,19 +1174,40 @@ function drawWinScreen() {
     ctx.fillStyle = COLORS.crateValid;
     ctx.font = '16px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('TRUCK LOADED!', canvas.width/2, 350);
+    ctx.fillText('TRUCK LOADED!', canvas.width/2, 320);
     
+    // Show high score message for levels 7 and 8
+    if (currentLevel >= 6) {
+        ctx.fillStyle = '#ffff00';
+        ctx.font = '12px "Press Start 2P", monospace';
+        if (currentLevel === 7) {
+            ctx.fillText('!! NEW HIGH SCORE !!', canvas.width/2, 360);
+        } else {
+            ctx.fillText('* HIGH SCORE *', canvas.width/2, 360);
+        }
+    }
+    
+    // Show nonsensical score
+    const levelScore = LEVEL_SCORES[currentLevel] + Math.floor(timeRemaining * 147);
     ctx.fillStyle = COLORS.text;
-    ctx.font = '10px "Press Start 2P", monospace';
-    ctx.fillText('TIME BONUS: ' + Math.floor(timeRemaining * 10), canvas.width/2, 400);
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.fillText(levelScore.toLocaleString() + ' pts', canvas.width/2, 410);
+    
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillStyle = COLORS.textDim;
+    ctx.fillText('TIME BONUS x' + (Math.floor(timeRemaining * 2.47)).toFixed(0), canvas.width/2, 445);
     
     if (currentLevel < LEVELS.length - 1) {
         if (Math.floor(Date.now() / 500) % 2 === 0) {
-            ctx.fillText('TAP FOR NEXT LEVEL', canvas.width/2, 500);
+            ctx.fillStyle = COLORS.text;
+            ctx.font = '10px "Press Start 2P", monospace';
+            ctx.fillText('TAP FOR NEXT LEVEL', canvas.width/2, 520);
         }
     } else {
         if (Math.floor(Date.now() / 500) % 2 === 0) {
-            ctx.fillText('TAP TO CELEBRATE', canvas.width/2, 500);
+            ctx.fillStyle = COLORS.text;
+            ctx.font = '10px "Press Start 2P", monospace';
+            ctx.fillText('TAP TO CELEBRATE', canvas.width/2, 520);
         }
     }
 }
